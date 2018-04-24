@@ -1,6 +1,6 @@
-#include<stdio.h>
-#include<stdlib.h>
-#include<omp.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <omp.h>
 
 /* Time in seconds from some point in the past */
 double dwalltime();
@@ -37,7 +37,11 @@ int main(int argc,char*argv[]){
 
   timetick = dwalltime();
  //Realiza la multiplicacion
+
+//Resulta mejor la opción 1 paralelizando filas. --PREGUNTAR SI ESTÁ BIEN--
+//Opción1: PARALELIZAR FILAS: #pragma omp parallel for private(i,j,k)
   for(i=0;i<N;i++){
+//Opción2: PARALELIZAR COLUMNAS: #pragma omp parallel for private(j,k)
    for(j=0;j<N;j++){
     C[i*N+j]=0;
     for(k=0;k<N;k++){
