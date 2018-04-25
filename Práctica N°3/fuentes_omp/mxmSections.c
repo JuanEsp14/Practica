@@ -1,7 +1,9 @@
- #include<stdio.h>
-#include<stdlib.h>
-#include<omp.h>
-
+#include <stdio.h>
+#include <stdlib.h>
+#include <omp.h>
+/*-- Cambios: faltaba poner privada a la variable k.
+La idea del ejercicio es que como hay dos secciones, al aumentar la
+cantidad de hilos a cuatro no hay diferencia--*/
 
 /* Time in seconds from some point in the past */
 double dwalltime();
@@ -40,7 +42,7 @@ int main(int argc,char*argv[]){
    }
   }
 
-  #pragma omp parallel private(i,j,timetick,tid) shared(A,B,C,D,E,N)
+  #pragma omp parallel private(i,j,k,timetick,tid) shared(A,B,C,D,E,N)
   {
     #pragma omp sections 
     {

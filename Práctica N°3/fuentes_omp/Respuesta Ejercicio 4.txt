@@ -6,3 +6,6 @@ Para solucionarlo se cambia el #pragma omp for  private(i,j,temp) nowait por
 distribuya el trabajo a medida que lo solicitan los hilos
 CONSULTAR si es ese el problema, y de ser así ¿Está bien que los tiempos sean
 mayores ahora?
+
+Respuesta: Los tiempos son mayores porque para un tamaño chico de datos se carga
+al hacer el schedule. 
