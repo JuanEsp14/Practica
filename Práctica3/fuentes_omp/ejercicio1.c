@@ -17,6 +17,16 @@ int main(int argc,char*argv[]){
  
  //Inicializa la matriz. Cada posicion debe quedar con el valor I*J
  // I => fila J=> columna. 
+/* CÓDIGO ANTERIOR: el problema que tiene es que el private no inicializa
+las variables entonces estaría tomando cualquier cosa. Hay que probar
+con firstprivate o alguna de esas opciones 
+  for(i=0;i<N;i++){
+   #pragma omp parallel for shared(A) private(i,j)
+   for(j=0;j<N;j++){
+    A[i*N+j]=i*j;
+   }
+  } 
+*/
 
 #pragma omp parallel for collapse(2) shared(A) private(i,j)
   for(i=0;i<N;i++){
@@ -24,6 +34,8 @@ int main(int argc,char*argv[]){
 		A[i*N+j]=i*j;
    }
   }   
+
+
 
  //Verifica el resultado
   for(i=0;i<N;i++){
