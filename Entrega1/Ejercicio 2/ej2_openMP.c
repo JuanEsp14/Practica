@@ -1,5 +1,6 @@
 #include<stdio.h>
 #include<stdlib.h>
+#include<omp.h>
 
 
 /* Time in seconds from some point in the past */
@@ -14,12 +15,14 @@ int main(int argc,char*argv[]){
   double timetick;
 
  //Controla los argumentos al programa
-  if (argc < 2){
-    printf("\n Faltan argumentos:: N dimension de la matriz\n");
+  if (argc < 3){
+    printf("\n Faltan argumentos:: N dimension de la matriz, T cantidad de threads \n");
   return 0;
   }
 
   N=atoi(argv[1]);
+  int numThreads = atoi(argv[2]);
+  //omp_set_num_threads(numThreads);
   divide=0;
 
  //Aloca memoria para las matrices
@@ -69,6 +72,7 @@ int main(int argc,char*argv[]){
   timetick = dwalltime();
 
 //Comienzo la multiplicación aux1 = AA, aux2=BE y aux3=DF
+#pragma omp parallel for collapse(2) shared(A, B, D, aux1, aux2, aux3, promB, promL, promU) private(i,j,k)
   for(i=0;i<N;i++){
    for(j=0;j<N;j++){
     promB = promB + B[i*N+j];
@@ -86,6 +90,7 @@ int main(int argc,char*argv[]){
   }
 
 //Multiplico la primer parte de las no triangulares A=aux1C
+#pragma omp parallel for collapse(2) shared(A, C, aux1) private(i,j,k)
   for(i=0;i<N;i++){
    for(j=0;j<N;j++){
      A[i*N+j]=0;
@@ -94,9 +99,8 @@ int main(int argc,char*argv[]){
    }
   }
 
-
-
 //Multiplico las matrices triangulares B=aux2L D=aux3U
+#pragma omp parallel for collapse(2) shared(B, D, aux2, aux3) private(i,j,k)
   for(i=0;i<N;i++){
    for(j=0;j<N;j++){
      B[i*N+j]=0;
@@ -119,6 +123,7 @@ int main(int argc,char*argv[]){
 //aux1=A.promLU
 //aux2=B.promB
 //aux3=D.promB
+#pragma omp parallel for collapse(2) shared(A, B, D, aux1, aux2, aux3, promB, promLU) private(i,j,k)
   for(i=0;i<N;i++){
     for(j=0;j<N;j++){
       aux1[i*N+j]=A[i*N+j]*promLU;
@@ -128,6 +133,7 @@ int main(int argc,char*argv[]){
   }
 
 //Sumo los 3 valores
+#pragma omp parallel for collapse(2) shared(M, aux1, aux2, aux3) private(i,j,k)
   for(i=0;i<N;i++){
     for(j=0;j<N;j++)
       M[i*N+j]=aux1[i*N+j]+aux2[i*N+j]+aux3[i*N+j];
@@ -162,6 +168,7 @@ int main(int argc,char*argv[]){
   free(aux3);
 
 return(0);
+
 }
 
 /****************************************************************************/
