@@ -22,8 +22,7 @@ int main(int argc,char*argv[]){
 
   N=atoi(argv[1]);
   int numThreads = atoi(argv[2]);
-  //omp_set_num_threads(numThreads);
-  divide=0;
+  omp_set_num_threads(numThreads);
 
  //Aloca memoria para las matrices
   A=(double*)malloc(sizeof(double)*N*N);
@@ -68,6 +67,7 @@ int main(int argc,char*argv[]){
   promB = 0;
   promL = 0;
   promU = 0;
+  divide = 1.0/(N*N);
 
   timetick = dwalltime();
 
@@ -113,7 +113,6 @@ int main(int argc,char*argv[]){
   }
 
 //Calculo los promedios
-  divide = 1.0/(N*N);
   promB = promB*divide;
   promL = promL*divide;
   promU = promU*divide;
