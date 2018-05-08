@@ -1,3 +1,6 @@
+/*Para compilar:
+gcc -pthread –o salidaEjecutable archivoFuente*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>

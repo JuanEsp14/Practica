@@ -1,3 +1,6 @@
+/*Para compilar:
+gcc -fopenmp –o salidaEjecutable archivoFuente*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <omp.h>

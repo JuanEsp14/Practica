@@ -1,3 +1,5 @@
+/* Para compilar:
+gcc –o salidaEjecutable archivoFuente.c*/
 #include <stdio.h>
 #include <stdlib.h>
 
