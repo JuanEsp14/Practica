@@ -1,3 +1,6 @@
+/*Para compilar:
+gcc -fopenmp –o salidaEjecutable archivoFuente*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <omp.h>
@@ -28,20 +31,22 @@ int main(int argc,char*argv[]){
 
  //Inicializa las matrices A y B en 1, el resultado sera una matriz con todos sus valores en N
   for(i=0;i<N;i++){
-   for(j=0;j<N;j++){
-	A[i*N+j]=1;
+    for(j=0;j<N;j++){
+      A[i*N+j]=1;
+      resultado[i*N+j]=0;
    }
   }   
 
   timetick = dwalltime();
  //Realiza la multiplicacion
 
+
+//collapse(3) no anda con 2048
 #pragma omp parallel for collapse(2) shared(A, resultado) private(i,j,k)
   for(i=0;i<N;i++){
    for(j=0;j<N;j++){
-    resultado[i*N+j]=0;
     for(k=0;k<N;k++){
-	resultado[i*N+j]= resultado[i*N+j] + A[i*N+k]*A[k+j*N];
+	     resultado[i*N+j]= resultado[i*N+j] + A[i*N+k]*A[k+j*N];
     }
    }
   }   

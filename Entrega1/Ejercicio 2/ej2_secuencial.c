@@ -1,5 +1,7 @@
-#include<stdio.h>
-#include<stdlib.h>
+/* Para compilar:
+gcc –o salidaEjecutable archivoFuente.c*/
+#include <stdio.h>
+#include <stdlib.h>
 
 
 /* Time in seconds from some point in the past */
@@ -72,8 +74,11 @@ int main(int argc,char*argv[]){
   for(i=0;i<N;i++){
    for(j=0;j<N;j++){
     promB = promB + B[i*N+j];
-    promL = promL + L[i*N+j];
-    promU = promU + U[i*N+j];
+    /*---ANALIZAR SI LOS IF PARA MATRICES TRIANGULARES MEJORAN---*/
+    if(i<j)
+      promL = promL + L[i*N+j];
+    if(j<i)
+      promU = promU + U[i*N+j];
     aux1[i*N+j]=0;
     aux2[i*N+j]=0;
     aux3[i*N+j]=0;
@@ -101,7 +106,7 @@ int main(int argc,char*argv[]){
    for(j=0;j<N;j++){
      B[i*N+j]=0;
      D[i*N+j]=0;
-     for(k = 0; k < j; k++)
+     for(k = 0; k <= j; k++)
        B[i*N+j]=B[i*N+j]+aux2[i*N+k]*L[k+N*j];
      for(k = j; k < N; k++)
        D[i*N+j]=D[i*N+j]+aux3[i*N+k]*U[k+N*j];

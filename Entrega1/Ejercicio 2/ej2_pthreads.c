@@ -1,6 +1,9 @@
-#include<stdio.h>
-#include<stdlib.h>
-#include<pthread.h>
+/*Para compilar:
+gcc -pthread –o salidaEjecutable archivoFuente*/
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
 
 double *A,*B,*C,*D,*E, *F, *L, *M, *U, *aux1, *aux2, *aux3;
 float promB, promL, promU, promLU, divide;
@@ -165,8 +168,11 @@ void *multiplicacion(void *id){
   for(i=desde;i<hasta;i++){
    for(j=0;j<N;j++){
     auxB = auxB + B[i*N+j];
-    auxL = auxL + L[i*N+j];
-    auxU = auxU + U[i*N+j];
+    /*---ANALIZAR SI LOS IF PARA MATRICES TRIANGULARES MEJORAN---*/
+    if(i<j)
+      auxL = auxL + L[i*N+j];
+    if(j<i)
+      auxU = auxU + U[i*N+j];
     aux1[i*N+j]=0;
     aux2[i*N+j]=0;
     aux3[i*N+j]=0;
@@ -198,7 +204,7 @@ void *multiplicacion(void *id){
    for(j=0;j<N;j++){
      B[i*N+j]=0;
      D[i*N+j]=0;
-     for(k = 0; k < j; k++)
+     for(k = 0; k <= j; k++)
        B[i*N+j]=B[i*N+j]+aux2[i*N+k]*L[k+N*j];
      for(k = j; k < N; k++)
        D[i*N+j]=D[i*N+j]+aux3[i*N+k]*U[k+N*j];

@@ -1,6 +1,9 @@
-#include<stdio.h>
-#include<stdlib.h>
-#include<omp.h>
+/*Para compilar:
+gcc -fopenmp –o salidaEjecutable archivoFuente*/
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <omp.h>
 
 
 /* Time in seconds from some point in the past */
@@ -72,12 +75,15 @@ int main(int argc,char*argv[]){
   timetick = dwalltime();
 
 //Comienzo la multiplicación aux1 = AA, aux2=BE y aux3=DF
-#pragma omp parallel for collapse(2) shared(A, B, D, aux1, aux2, aux3, promB, promL, promU) private(i,j,k)
+#pragma omp parallel for collapse(2) shared(A, B, D, aux1, aux2, aux3) private(i,j,k) reduction (+:promB) reduction (+:promL) reduction(+:promU)
   for(i=0;i<N;i++){
    for(j=0;j<N;j++){
-    promB = promB + B[i*N+j];
-    promL = promL + L[i*N+j];
-    promU = promU + U[i*N+j];
+    promB+= B[i*N+j];
+    /*---ANALIZAR SI LOS IF PARA MATRICES TRIANGULARES MEJORAN---*/
+    if(i<j)
+      promL+= L[i*N+j];
+    if(j<i)
+      promU+= U[i*N+j];
     aux1[i*N+j]=0;
     aux2[i*N+j]=0;
     aux3[i*N+j]=0;
@@ -105,10 +111,13 @@ int main(int argc,char*argv[]){
    for(j=0;j<N;j++){
      B[i*N+j]=0;
      D[i*N+j]=0;
-     for(k = 0; k < j; k++)
-       B[i*N+j]=B[i*N+j]+aux2[i*N+k]*L[k+N*j];
-     for(k = j; k < N; k++)
+     for(k = 0; k <= j; k++){
+       B[i*N+j]=B[i*N+j]+aux2[i*N+k]*L[k+N*j];  
+     }
+     for(k = j; k < N; k++){
        D[i*N+j]=D[i*N+j]+aux3[i*N+k]*U[k+N*j];
+     }
+
    }
   }
 

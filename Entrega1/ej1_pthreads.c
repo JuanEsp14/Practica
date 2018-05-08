@@ -1,3 +1,6 @@
+/*Para compilar:
+gcc -pthread –o salidaEjecutable archivoFuente*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
@@ -17,62 +20,62 @@ int main(int argc,char*argv[]){
    return 0;
   }
 
-N=atoi(argv[1]);
-T=atoi(argv[2]);
-int i,j,k;
-int check=1;
-double timetick;
-pthread_t misHilos[T];
-int threads_ids[T];
+  N=atoi(argv[1]);
+  T=atoi(argv[2]);
+  int i,j,k;
+  int check=1;
+  double timetick;
+  pthread_t misHilos[T];
+  int threads_ids[T];
 
-//tamaño que le corresponde a cada hilo
-tamanoBloque=N/T;
+  //tamaño que le corresponde a cada hilo
+  tamanoBloque=N/T;
 
- A=(double*)malloc(sizeof(double)*N*N);
- resultado=(double*)malloc(sizeof(double)*N*N);
+   A=(double*)malloc(sizeof(double)*N*N);
+   resultado=(double*)malloc(sizeof(double)*N*N);
 
- //Inicializo matriz A
-for(i=0;i<N;i++){
-	for(j=0;j<N;j++){
-		A[i*N+j]=1;
-	}
-}
-
-timetick = dwalltime();
-
-//Creo los hilos
-for(int id=0;id<T;id++){
-	threads_ids[id] = id;
-	pthread_create(&misHilos[id], NULL, &multiplicacion,(void*)&threads_ids[id]);
-}
-
-
-//Espera a que finalicen
-for (i=0; i <T; i++)
-		pthread_join(misHilos[i], NULL);
-
-
-
-printf("Tiempo: %f \n", dwalltime() - timetick);
-
-
- //Verifica el resultado
+   //Inicializo matriz A
   for(i=0;i<N;i++){
-   for(j=0;j<N;j++){
-	    check=check&&(resultado[i*N+j]==N);
-   }
+  	for(j=0;j<N;j++){
+  		A[i*N+j]=1;
+  	}
   }
 
-  if(check){
-   printf("Multiplicacion de matrices resultado correcto\n");
-  }else{
-   printf("Multiplicacion de matrices resultado erroneo\n");
+  timetick = dwalltime();
+
+  //Creo los hilos
+  for(int id=0;id<T;id++){
+  	threads_ids[id] = id;
+  	pthread_create(&misHilos[id], NULL, &multiplicacion,(void*)&threads_ids[id]);
   }
 
- free(A);
- free(resultado);
 
- return(0);
+  //Espera a que finalicen
+  for (i=0; i <T; i++)
+  		pthread_join(misHilos[i], NULL);
+
+
+
+  printf("Tiempo: %f \n", dwalltime() - timetick);
+
+
+   //Verifica el resultado
+    for(i=0;i<N;i++){
+     for(j=0;j<N;j++){
+  	    check=check&&(resultado[i*N+j]==N);
+     }
+    }
+
+    if(check){
+     printf("Multiplicacion de matrices resultado correcto\n");
+    }else{
+     printf("Multiplicacion de matrices resultado erroneo\n");
+    }
+
+   free(A);
+   free(resultado);
+
+   return(0);
 }
 
 void* multiplicacion(void *id){
