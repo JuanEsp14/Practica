@@ -10,8 +10,9 @@ double dwalltime();
 
 
 int main(int argc,char*argv[]){
- double *A,*resultado;
+ double *A,*At,*resultado;
  int i,j,k,N;
+ double temp;
  int check=1;
  double timetick;
 
@@ -27,6 +28,7 @@ int main(int argc,char*argv[]){
    
  //Aloca memoria para las matrices
   A=(double*)malloc(sizeof(double)*N*N);
+  At=(double*)malloc(sizeof(double)*N*N);
   resultado=(double*)malloc(sizeof(double)*N*N);
 
  //Inicializa las matrices A y B en 1, el resultado sera una matriz con todos sus valores en N
@@ -36,17 +38,25 @@ int main(int argc,char*argv[]){
       resultado[i*N+j]=0;
    }
   }   
+//traspuesta
+  for(i=0;i<N;i++){
+   for(j=0;j<N;j++){
+		temp = A[i*N+j];
+		At[i*N+j]= A[j*N+i];
+		At[j*N+i]= temp;
+   }
+  }
 
   timetick = dwalltime();
  //Realiza la multiplicacion
 
 
-//collapse(3) no anda con 2048
+
 #pragma omp parallel for collapse(2) shared(A, resultado) private(i,j,k)
   for(i=0;i<N;i++){
    for(j=0;j<N;j++){
     for(k=0;k<N;k++){
-	     resultado[i*N+j]= resultado[i*N+j] + A[i*N+k]*A[k+j*N];
+	     resultado[i*N+j]= resultado[i*N+j] + A[i*N+k]*At[k+j*N];
     }
    }
   }   
@@ -67,6 +77,7 @@ int main(int argc,char*argv[]){
 
  free(A);
  free(resultado);
+ free(At);
  return(0);
 }
 

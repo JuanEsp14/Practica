@@ -7,7 +7,8 @@ gcc –o salidaEjecutable archivoFuente.c*/
 double dwalltime();
 
 int main(int argc,char*argv[]){
- double *A, *resultado;
+ double *A,*At,*resultado;
+ double temp;
  int i,j,k;
  int check = 1; 
   double timetick;
@@ -16,29 +17,40 @@ int main(int argc,char*argv[]){
  
  //Aloca memoria para la matriz
   A=(double*)malloc(sizeof(double)*N*N);
+  At=(double*)malloc(sizeof(double)*N*N);
   resultado=(double*)malloc(sizeof(double)*N*N);
 
 //Inicializo matriz A
 for(i=0;i<N;i++){
   for(j=0;j<N;j++){
     A[i*N+j]=1;
+    resultado[i*N+j]=0;
   }
 }
+
+//traspuesta
+  for(i=0;i<N;i++){
+   for(j=0;j<N;j++){
+		temp = A[i*N+j];
+		At[i*N+j]= A[j*N+i];
+		At[j*N+i]= temp;
+   }
+  }
+
 
 timetick = dwalltime();
 //multiplicación
   for(i=0;i<N;i++){
    for(j=0;j<N;j++){
-    resultado[i*N+j]=0;
     for(k=0;k<N;k++){
-  resultado[i*N+j]= resultado[i*N+j] + A[i*N+k]*A[k+j*N];
+  resultado[i*N+j]= resultado[i*N+j] + A[i*N+k]*At[k+j*N];
     }
    }
   }
 printf("Tiempo en segundos %f \n", dwalltime() - timetick);
 
 
-
+	
  //Verifica el resultado
   for(i=0;i<N;i++){
    for(j=0;j<N;j++){
@@ -53,6 +65,7 @@ printf("Tiempo en segundos %f \n", dwalltime() - timetick);
   }
  free(A);
  free(resultado);
+ free(At);
  return(0);
 }
 
