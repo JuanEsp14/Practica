@@ -9,7 +9,8 @@ gcc -pthread –o salidaEjecutable archivoFuente*/
 double dwalltime();
 void* multiplicacion(void *id);
 int tamanoBloque, N, T;
-double *A, *resultado;
+ double *A,*At,*resultado;
+ double temp;
 
 
 int main(int argc,char*argv[]){
@@ -32,6 +33,7 @@ int main(int argc,char*argv[]){
   tamanoBloque=N/T;
 
    A=(double*)malloc(sizeof(double)*N*N);
+   At=(double*)malloc(sizeof(double)*N*N);
    resultado=(double*)malloc(sizeof(double)*N*N);
 
    //Inicializo matriz A
@@ -39,6 +41,15 @@ int main(int argc,char*argv[]){
   	for(j=0;j<N;j++){
   		A[i*N+j]=1;
   	}
+  }
+
+//traspuesta
+  for(i=0;i<N;i++){
+   for(j=0;j<N;j++){
+		temp = A[i*N+j];
+		At[i*N+j]= A[j*N+i];
+		At[j*N+i]= temp;
+   }
   }
 
   timetick = dwalltime();
@@ -74,6 +85,7 @@ int main(int argc,char*argv[]){
 
    free(A);
    free(resultado);
+   free(At);
 
    return(0);
 }
@@ -87,7 +99,7 @@ void* multiplicacion(void *id){
         for(j= 0; j < N; j++){
             resultado[i*N+j]=0;
             for(k= 0; k < N; k++){
-                resultado[i*N+j]+= A[i*N+k]*A[k+N*j];
+                resultado[i*N+j]+= A[i*N+k]*At[k+N*j];
             }
         }
     }
