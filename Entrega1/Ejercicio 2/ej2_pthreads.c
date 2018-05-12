@@ -5,7 +5,7 @@ gcc -pthread –o salidaEjecutable archivoFuente*/
 #include <stdlib.h>
 #include <pthread.h>
 
-double *A,*B,*C,*D,*E, *F, *L, *M, *U, *aux1, *aux2, *aux3;
+double *A,*B,*C,*D,*E, *F, *L, *M, *U, *At, *aux1, *aux2, *aux3, temp;
 float promB, promL, promU, promLU, divide;
 int tamBloque, cantHilos, N;
 pthread_mutex_t mut = PTHREAD_MUTEX_INITIALIZER;
@@ -45,6 +45,7 @@ int main(int argc,char*argv[]){
   L=(double*)malloc(sizeof(double)*N*N);
   M=(double*)malloc(sizeof(double)*N*N);
   U=(double*)malloc(sizeof(double)*N*N);
+  At=(double*)malloc(sizeof(double)*N*N);
   aux1=(double*)malloc(sizeof(double)*N*N);
   aux2=(double*)malloc(sizeof(double)*N*N);
   aux3=(double*)malloc(sizeof(double)*N*N);
@@ -72,6 +73,15 @@ int main(int argc,char*argv[]){
         L[i+N*j]=0;
        }
     }
+  }
+
+//Calculo transpuesta
+ for(i=0;i<N;i++){
+   for(j=0;j<N;j++){
+		temp = A[i*N+j];
+		At[i*N+j]= A[j*N+i];
+		At[j*N+i]= temp;
+   }
   }
 
 //Inicializo promedios de las matrices B, U y L
@@ -124,6 +134,7 @@ int main(int argc,char*argv[]){
   free(F);
   free(L);
   free(U);
+  free(At);
   free(aux1);
   free(aux2);
   free(aux3);
@@ -169,15 +180,15 @@ void *multiplicacion(void *id){
    for(j=0;j<N;j++){
     auxB = auxB + B[i*N+j];
     /*---ANALIZAR SI LOS IF PARA MATRICES TRIANGULARES MEJORAN---*/
-    if(i<j)
+    if(i >= j)
       auxL = auxL + L[i*N+j];
-    if(j<i)
+    if(j >= i)
       auxU = auxU + U[i*N+j];
     aux1[i*N+j]=0;
     aux2[i*N+j]=0;
     aux3[i*N+j]=0;
     for(k= 0; k < N; k++){
-      aux1[i*N+j]=aux1[i*N+j]+A[i*N+k]*A[k+N*j];
+      aux1[i*N+j]=aux1[i*N+j]+A[i*N+k]*At[k+N*j];
       aux2[i*N+j]=aux2[i*N+j]+B[i*N+k]*E[k+N*j];
       aux3[i*N+j]=aux3[i*N+j]+D[i*N+k]*F[k+N*j];
     }

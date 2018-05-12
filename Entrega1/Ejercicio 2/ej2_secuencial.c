@@ -9,7 +9,7 @@ double dwalltime();
 
 
 int main(int argc,char*argv[]){
-  double *A,*B,*C,*D,*E, *F, *L, *M, *U, *aux1, *aux2, *aux3;
+  double *A,*B,*C,*D,*E, *F, *L, *M, *U, *At, *aux1, *aux2, *aux3, temp;
   int i, j, k, N;
   int check=1;
   float promB, promL, promU, promLU, divide;
@@ -34,6 +34,7 @@ int main(int argc,char*argv[]){
   L=(double*)malloc(sizeof(double)*N*N);
   M=(double*)malloc(sizeof(double)*N*N);
   U=(double*)malloc(sizeof(double)*N*N);
+  At=(double*)malloc(sizeof(double)*N*N);
   aux1=(double*)malloc(sizeof(double)*N*N);
   aux2=(double*)malloc(sizeof(double)*N*N);
   aux3=(double*)malloc(sizeof(double)*N*N);
@@ -63,6 +64,15 @@ int main(int argc,char*argv[]){
     }
   }
 
+//Calculo transpuesta
+ for(i=0;i<N;i++){
+   for(j=0;j<N;j++){
+		temp = A[i*N+j];
+		At[i*N+j]= A[j*N+i];
+		At[j*N+i]= temp;
+   }
+  }
+
 //Inicializo promedios de las matrices B, U y L
   promB = 0;
   promL = 0;
@@ -75,15 +85,15 @@ int main(int argc,char*argv[]){
    for(j=0;j<N;j++){
     promB = promB + B[i*N+j];
     /*---ANALIZAR SI LOS IF PARA MATRICES TRIANGULARES MEJORAN---*/
-    if(i<j)
+    if(i >= j)
       promL = promL + L[i*N+j];
-    if(j<i)
+    if(j >= i)
       promU = promU + U[i*N+j];
     aux1[i*N+j]=0;
     aux2[i*N+j]=0;
     aux3[i*N+j]=0;
     for(k= 0; k < N; k++){
-      aux1[i*N+j]=aux1[i*N+j]+A[i*N+k]*A[k+N*j];
+      aux1[i*N+j]=aux1[i*N+j]+A[i*N+k]*At[k+N*j];
       aux2[i*N+j]=aux2[i*N+j]+B[i*N+k]*E[k+N*j];
       aux3[i*N+j]=aux3[i*N+j]+D[i*N+k]*F[k+N*j];
     }
@@ -162,6 +172,7 @@ int main(int argc,char*argv[]){
   free(F);
   free(L);
   free(U);
+  free(At);
   free(aux1);
   free(aux2);
   free(aux3);

@@ -27,7 +27,7 @@ int main(int argc,char*argv[]){
   timetick = dwalltime();
 
 //Verifico cuántos números pares existen
-  #pragma omp parallel for
+  #pragma omp parallel for reduction(+:pares)
   for(i = 0; i < N; i++){
     if((vector[i]&1) == 0)
       pares++;
