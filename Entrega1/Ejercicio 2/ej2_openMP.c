@@ -75,6 +75,7 @@ int main(int argc,char*argv[]){
 
   timetick = dwalltime();
 
+#pragma omp parallel
 //Comienzo la multiplicación aux1 = AA, aux2=BE y aux3=DF
 #pragma omp parallel for collapse(2) shared(A, B, D, aux1, aux2, aux3) private(i,j,k) reduction (+:promB) reduction (+:promL) reduction(+:promU)
   for(i=0;i<N;i++){
@@ -121,7 +122,7 @@ int main(int argc,char*argv[]){
      B[i*N+j]=0;
      D[i*N+j]=0;
      for(k = 0; k <= j; k++){
-       B[i*N+j]=B[i*N+j]+aux2[i*N+k]*L[k+N*j];  
+       B[i*N+j]=B[i*N+j]+aux2[i*N+k]*L[k+N*j];
      }
      for(k = j; k < N; k++){
        D[i*N+j]=D[i*N+j]+aux3[i*N+k]*U[k+N*j];
