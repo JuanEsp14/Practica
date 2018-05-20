@@ -46,6 +46,9 @@ int main(int argc, char **argv){
 	}else{
 		printf("Multiplicacion de matrices resultado erroneo\n");
 	}
+	free(A);
+	free(B);
+	free(C);
     return 0;
 }
 
