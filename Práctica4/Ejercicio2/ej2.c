@@ -31,7 +31,10 @@ void master(int N, int cantProcesos){
 	int *A=(int*) malloc(sizeof(int)*N*N);
 	int *B=(int*) malloc(sizeof(int)*N*N);
 	int *A_aux=(int*) malloc(sizeof(int)*N*N);
+	int *B_aux=(int*) malloc(sizeof(int)*N*N);
+
 	int *max_min=(int*) malloc(sizeof(int)*2);
+	int *promedioSend=(int*) malloc(sizeof(int));
 	unsigned long *totalR=(unsigned long*) malloc (sizeof(unsigned long));
 	MPI_Status status;
 
@@ -39,16 +42,16 @@ void master(int N, int cantProcesos){
 	int max=-1;
 	int min=999;
 	unsigned long total=0;
-	double promedio;
+	int promedio;
 	/* Inicializa Matriz A con números random del 0 al 9*/
 	srand(time(NULL));
-	printf("Matriz A:\n"); 
+	// -- PARA PRUEBAS N CHICO: printf("Matriz A:\n"); 
 	for(i=0; i<N; i++){
 		for(j=0; j<N; j++){
 			A[i*N+j]=rand()%10;
-			printf("%d ", A[i*N+j]);
+			// -- PARA PRUEBAS N CHICO: printf("%d ", A[i*N+j]);
 		}
-		printf("\n");
+		// -- PARA PRUEBAS N CHICO:printf("\n");
 	}
 	
 	timetick = dwalltime();
@@ -65,9 +68,13 @@ void master(int N, int cantProcesos){
 			total+=A_aux[i*N+j];
 		}
 	}		
+	/* --CODIGO PARA PRUEBAS CON N CHICO--*/
+	/*
 	printf("Máximo del proceso: %d: %d \n", 0, max);
 	printf("Mínimo del proceso: %d: %d \n", 0, min);
 	printf("Total del proceso: %d: %d \n", 0, total);
+	*/
+
 	/* -- Acá tengo dudas si se puede enviar todo en un mensaje, porque max y min son
 	int pero el promedio es unsigned long. A su vez no se si es correcto enviar max y 
 	min en el mismo mensaje*/
@@ -83,21 +90,39 @@ void master(int N, int cantProcesos){
 		total+=totalR[0];
 	}
 
-	promedio=(double)total/(N*N);
-	printf("Promedio: %f\n", promedio);
+	promedio=(int)total/(N*N);
+	printf("Promedio: %d\n", promedio);
 	printf("Mínimo: %d\n", min);
 	printf("Máximo: %d\n", max);
+	max_min[0]=max;
+	max_min[1]=min;
+	promedioSend[0]=promedio;
+
+	MPI_Scatter(B, (N/cantProcesos)*N, MPI_INT, B_aux, (N/cantProcesos)*N, MPI_INT, 0, MPI_COMM_WORLD);
+	for(i=1;i<cantProcesos;i++){
+		MPI_Send(max_min, 2, MPI_INT, i, 99, MPI_COMM_WORLD);
+		MPI_Send(promedioSend, 1, MPI_INT, i, 98, MPI_COMM_WORLD);
+	}	
+
+
+	for(i=0;i<N/cantProcesos;i++){
+		for(j=0; j<N;j++){
+			if(A_aux[i*N+j]<promedio)
+				B_aux[i*N+j]=min;
+			if(A_aux[i*N+j]>promedio)
+				B_aux[i*N+j]=max;
+			if(A_aux[i*N+j]==promedio)
+				B_aux[i*N+j]=promedio;
+		}
+	}
+
+	MPI_Gather(B_aux, (N/cantProcesos)*N, MPI_INT, B, (N/cantProcesos)*N, MPI_INT, 0, MPI_COMM_WORLD);
+	/*  --CODIGO PARA PRUEBAS CON N CHICO--*/
 	/*
 	for(i=0;i<N;i++){
-		for(j=0; j<N;j++){
-			if(A[i*N+j]<promedio)
-				B[i*N+j]=min;
-			if(A[i*N+j]>promedio)
-				B[i*N+j]=max;
-			if(A[i*N+j]==promedio)
-				B[i*N+j]=promedio;
+		for(j=0;j<N;j++){
 			printf("%d ", B[i*N+j]);
-		}
+		}	
 		printf("\n");
 	}
 	*/
@@ -105,15 +130,20 @@ void master(int N, int cantProcesos){
 
     free(A);
     free(B);
+    free(A_aux);
+    free(B_aux);
     
 }
 
 void procesos(int N, int cantProcesos){
 	int i,j, id;
 	int *A;
-	int *B=(int*) malloc(sizeof(int)*N*N);
+	int *B;
 	int *A_aux=(int*) malloc(sizeof(int)*N*N);
+	int *B_aux=(int*) malloc(sizeof(int)*N*N);
+
 	int *max_min=(int*) malloc(sizeof(int)*2);
+	int *promedioSend=(int*) malloc(sizeof(int));
 	unsigned long *totalR=(unsigned long*) malloc (sizeof(unsigned long));
 	MPI_Status status;
 
@@ -133,16 +163,39 @@ void procesos(int N, int cantProcesos){
 			total+=A_aux[i*N+j];
 		}
 	}
+		/* --CODIGO PARA PRUEBAS CON N CHICO--*/
+	/*
 	printf("Máximo del proceso: %d: %d \n", id, max);
 	printf("Mínimo del proceso: %d: %d \n", id, min);
 	printf("Total del proceso: %d: %d \n", id, total);
+	*/
 	max_min[0]=max;
 	max_min[1]=min;
 	totalR[0]=total;
 	MPI_Send(max_min, 2, MPI_INT, 0, 99, MPI_COMM_WORLD);
 	MPI_Send(totalR, 1, MPI_UNSIGNED_LONG, 0, 98, MPI_COMM_WORLD);	
+
+	MPI_Scatter(B, (N/cantProcesos)*N, MPI_INT, B_aux, (N/cantProcesos)*N, MPI_INT, 0, MPI_COMM_WORLD);
+	MPI_Recv(max_min,2,MPI_INT,0,99,MPI_COMM_WORLD, &status);
+	MPI_Recv(promedioSend,1,MPI_INT,0,98,MPI_COMM_WORLD, &status);
+
+	for(i=0;i<N/cantProcesos;i++){
+		for(j=0; j<N;j++){
+			if(A_aux[i*N+j]<promedioSend[0])
+				B_aux[i*N+j]=max_min[1];
+			if(A_aux[i*N+j]>promedioSend[0])
+				B_aux[i*N+j]=max_min[0];
+			if(A_aux[i*N+j]==promedioSend[0])
+				B_aux[i*N+j]=promedioSend[0];
+		}
+	}
+	MPI_Gather(B_aux, (N/cantProcesos)*N, MPI_INT, B, (N/cantProcesos)*N, MPI_INT, 0, MPI_COMM_WORLD);
+	free(A_aux);
+    free(B_aux);
+
 	
 }
+
 
 
 
@@ -159,5 +212,6 @@ double dwalltime()
 	sec = tv.tv_sec + tv.tv_usec/1000000.0;
 	return sec;
 }
+
 
 

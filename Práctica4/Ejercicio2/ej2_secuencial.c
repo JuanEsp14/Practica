@@ -18,13 +18,13 @@ int main(int argc, char **argv){
 	unsigned long promedio;
 	/* Inicializa Matriz A con números random del 0 al 9*/
 	srand(time(NULL));
-	printf("Matriz A:\n"); 
+	// PARA PRUEBAS N CHICO: printf("Matriz A:\n"); 
 	for(i=0; i<N; i++){
 		for(j=0; j<N; j++){
 			A[i*N+j]=rand()%10;
-			printf("%d ", A[i*N+j]);
+			// PARA PRUEBAS N CHICO: printf("%d ", A[i*N+j]);
 		}
-		printf("\n");
+		// PARA PRUEBAS N CHICO: printf("\n");
 	}
 	
 	timetick = dwalltime();
@@ -53,9 +53,9 @@ int main(int argc, char **argv){
 				B[i*N+j]=max;
 			if(A[i*N+j]==promedio)
 				B[i*N+j]=promedio;
-			printf("%d ", B[i*N+j]);
+			// PARA PRUEBAS N CHICO: printf("%d ", B[i*N+j]);
 		}
-		printf("\n");
+		// PARA PRUEBAS N CHICO: printf("\n");
 	}
 	
     printf("Tiempo en segundos %f \n", dwalltime() - timetick);
