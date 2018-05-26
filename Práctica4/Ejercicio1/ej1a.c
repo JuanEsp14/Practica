@@ -8,6 +8,7 @@
 #include "mpi.h"
 #include <time.h>
 
+
 /* Time in seconds from some point in the past */
 double dwalltime();
 
@@ -49,19 +50,25 @@ void master(int N, int cantProcesos){
 
 
 	 //Inicializa las matrices A y B en 1, el resultado sera una matriz con todos sus valores en N
+
 	for(i=0;i<N;i++){
 		for(j=0;j<N;j++){
 			A[i*N+j]=1;
 			B[i+j*N]=1;
 		}
 	}   
+	/* Inicializa Matriz A con números random del 0 al 9*/
+
 	timetick = dwalltime();
 	/**Divide a la matriz A por la cantidad de procesos, y envia
 	a cada proceso y a él mismo una cantidad N/cantProcesos de filas**/
-	offset=N/cantProcesos;
+	offset=(N*N)/cantProcesos;
+
 	for(i=1; i<cantProcesos;i++){
+		printf("offset: %d\n", offset); 
 		MPI_Send(&A[offset], (N/cantProcesos)*N, MPI_INT, i, 99, MPI_COMM_WORLD);
-		offset+=N/cantProcesos;
+		offset+=(N*N)/cantProcesos;
+		
 	}
 
 	//Envia a todos los procesos la matriz B entera (cantidad de elementos de tipo int NxN)
@@ -74,14 +81,16 @@ void master(int N, int cantProcesos){
 	for (i=0; i<N/cantProcesos; i++){
 	  for (j=0; j<N; j++)  {
 	    C[i*N+j] = 0;
+		printf("%d ", A[i*N+j]);
 	    for (k=0; k<N; k++)
 	      C[i*N+j] += A[i*N+k] * B[k*N+j];
 	  }
+		printf("\n");
 	}
-	offset=N/cantProcesos;
-	for(i=1;i<N/cantProcesos;i++){
+	offset=(N*N)/cantProcesos;
+	for(i=1;i<cantProcesos;i++){
 		MPI_Recv(&C[offset],(N/cantProcesos)*N,MPI_INT,i,99,MPI_COMM_WORLD, &status);
-		offset+=N/cantProcesos;
+		offset+=(N*N)/cantProcesos;
 	}
 
     printf("Tiempo en segundos %f \n", dwalltime() - timetick);
@@ -111,24 +120,27 @@ void procesos(int N, int cantProcesos){
 	int **A;
 	int **C;
 
-	int id;
 	unsigned long cant;
 	MPI_Status status;
 
-	MPI_Comm_rank(MPI_COMM_WORLD, &id);
+
 	//Recibe la parte de la matriz A y la guarda en A_aux
 	MPI_Recv(A_aux,(N/cantProcesos)*N,MPI_INT,0,99,MPI_COMM_WORLD, &status);
 
 	//Recibe la matriz B entera
 	MPI_Bcast(B,N*N, MPI_INT,0,MPI_COMM_WORLD);
-
+	printf("\n");
 	//Multiplicación de la porción de matriz que le corresponde
 	for (i=0; i<N/cantProcesos; i++){
 	  for (j=0; j<N; j++)  {
 	    C_aux[i*N+j] = 0;
+		printf("%d", A_aux[i*N+j]);
 	    for (k=0; k<N; k++)
 	      C_aux[i*N+j] += A_aux[i*N+k] * B[k*N+j];
+		
+	
 	  }
+		printf("\n");
 	}
 	
 	MPI_Send(A_aux, (N/cantProcesos)*N, MPI_INT, 0, 99, MPI_COMM_WORLD);

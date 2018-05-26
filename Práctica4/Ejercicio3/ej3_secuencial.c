@@ -4,7 +4,8 @@
 #include <time.h>
 
 #define SIZESTRING 25
-/* Time in seconds from some point in the past */
+/* Time in seconds from some point in the past 
+   Analizar el problema de frontera cuando se divide el arreglo en el paralelo*/
 
 typedef struct{
   char palabra[SIZESTRING];
@@ -17,12 +18,13 @@ int posListaPalabras=0;
 Lista *AddToList(Lista *pLista, int largoPalabra, char *palabra){
   int encontrada=0;
 
-  printf("%d\n", posListaPalabras );
-  for(int i = 0; i < posListaPalabras; i++){
-    if(strcmp(pLista[i].palabra, palabra) == 0){
-      pLista[i].contador++;
+  printf("Cantidad de palabras actualmente: %d\n", posListaPalabras );
+  for(int j = 0; j < posListaPalabras; j++){
+    printf("Comparo con la posición %s\n", pLista[j].palabra);
+    if(strcmp(pLista[j].palabra, palabra) == 0){
+      pLista[j].contador++;
       encontrada=1;
-      printf("%d\n", pLista[i].contador++);
+      printf("Contador de palabras: %d\n", pLista[j].contador++);
     }
   }
   if(encontrada == 0){
@@ -37,8 +39,8 @@ Lista *AddToList(Lista *pLista, int largoPalabra, char *palabra){
     strncpy(pLista[posListaPalabras].palabra, palabra ,largoPalabra);
     //printf("%s\n", palabra);
     posListaPalabras++;
-    return pLista;
    }
+  return pLista;
 }
 
 int main(int argc, char **argv){
@@ -56,22 +58,30 @@ int main(int argc, char **argv){
   printf("Ingrese una oracion: ");
   fgets(oracion, 100, stdin);
 
- 	timetick = dwalltime();
+  timetick = dwalltime();
 
+  printf("Cantidad de caracteres %d\n", strlen(oracion));
   for(i = 0; i < strlen(oracion); i++){
+    printf("Posición %d\n", i);
+    printf("Caracter %c\n", oracion[i]);
     if(oracion[i] != ' ' && oracion[i] != '\0'){
       palabra[largoPalabra] = oracion[i];
       largoPalabra++;
     }else{
-      printf("%s\n", palabra);
+      //printf("%s\n", palabra);
       if(oracion[i] != '\0'){
+	printf("Evaluo palabra\n");
+	palabra[i]='\0';
+	largoPalabra++;
+	printf("largo de palabra %d\n", strlen(palabra));
         pListaPalabras = AddToList(pListaPalabras,largoPalabra,palabra);
         largoPalabra = 0;
+	memset(palabra,0,SIZESTRING);
       }
-
     }
   }
 
+  printf("Sali de evaluar\n");	
   for(i=0; i < posListaPalabras; i++){
     printf("%s: %d veces\n", pListaPalabras[i].palabra, pListaPalabras[i].contador);
   }
