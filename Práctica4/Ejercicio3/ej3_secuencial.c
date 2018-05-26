@@ -56,6 +56,7 @@ int main(int argc, char **argv){
 
   timetick = dwalltime();
 
+  printf("Cantidad de caracteres %d\n", strlen(oracion));
   for(i = 0; i < strlen(oracion); i++){
     //Verifico si se cambió de palabra o si se está por terminar el texto para
     //elminar el \0
@@ -69,6 +70,7 @@ int main(int argc, char **argv){
     }
   }
 
+  printf("Sali de evaluar\n");
   for(i=0; i < posListaPalabras; i++){
     printf("%s: %d veces\n", pListaPalabras[i].palabra, pListaPalabras[i].contador);
   }
