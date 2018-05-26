@@ -4,7 +4,8 @@
 #include <time.h>
 
 #define SIZESTRING 25
-/* Time in seconds from some point in the past */
+/* Time in seconds from some point in the past
+   Analizar el problema de frontera cuando se divide el arreglo en el paralelo*/
 
 typedef struct{
   char palabra[SIZESTRING];
@@ -17,12 +18,10 @@ int posListaPalabras=0;
 Lista *AddToList(Lista *pLista, int largoPalabra, char *palabra){
   int encontrada=0;
 
-  printf("%d\n", posListaPalabras );
-  for(int i = 0; i < posListaPalabras; i++){
-    if(strcmp(pLista[i].palabra, palabra) == 0){
-      pLista[i].contador++;
+  for(int j = 0; j < posListaPalabras; j++){
+    if(strcmp(pLista[j].palabra, palabra) == 0){
+      pLista[j].contador++;
       encontrada=1;
-      printf("%d\n", pLista[i].contador++);
     }
   }
   if(encontrada == 0){
@@ -35,10 +34,9 @@ Lista *AddToList(Lista *pLista, int largoPalabra, char *palabra){
     memset(pLista[posListaPalabras].palabra,0,largoPalabra);
     pLista[posListaPalabras].contador = 1;
     strncpy(pLista[posListaPalabras].palabra, palabra ,largoPalabra);
-    //printf("%s\n", palabra);
     posListaPalabras++;
-    return pLista;
    }
+  return pLista;
 }
 
 int main(int argc, char **argv){
@@ -56,19 +54,18 @@ int main(int argc, char **argv){
   printf("Ingrese una oracion: ");
   fgets(oracion, 100, stdin);
 
- 	timetick = dwalltime();
+  timetick = dwalltime();
 
   for(i = 0; i < strlen(oracion); i++){
-    if(oracion[i] != ' ' && oracion[i] != '\0'){
+    //Verifico si se cambió de palabra o si se está por terminar el texto para
+    //elminar el \0
+    if(oracion[i] != ' ' && i < strlen(oracion)-1){
       palabra[largoPalabra] = oracion[i];
       largoPalabra++;
     }else{
-      printf("%s\n", palabra);
-      if(oracion[i] != '\0'){
-        pListaPalabras = AddToList(pListaPalabras,largoPalabra,palabra);
-        largoPalabra = 0;
-      }
-
+       pListaPalabras = AddToList(pListaPalabras,largoPalabra,palabra);
+       largoPalabra = 0;
+	     memset(palabra,0,SIZESTRING);
     }
   }
 
