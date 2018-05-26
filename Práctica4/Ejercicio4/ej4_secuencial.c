@@ -3,28 +3,21 @@
 # include <pthread.h>
 #include <time.h>
 
+double dwalltime();
 
 int main(int argc, char*argv[]){
   int N = atol(argv[1]);
-  int i;
+  int i, aux, k, l, iMin, merge = 0;
   int cantHilos;
   int *arreglo=(int*) malloc(sizeof(int)*N);
   int *arrAux=(int*) malloc(sizeof(int)*N);
 
-
-
-  int aux, k, l, iMin, merge = 0;
-  srand(time(NULL));
-
   /* Inicializo el arreglo con un random */
   for (i = 0; i < N; i++) {
       arreglo[i] = (rand() % 500); //Valor entre 0 y 499
-      printf("%d\n", arreglo[i]);
   }
 
   for(int k = 0; k < N; k++){
-
-    if (merge == 0){
       for(int i = 0; i < N; i++){
         iMin = i;
         for (int j = i+1; j < N; j++){
@@ -35,26 +28,29 @@ int main(int argc, char*argv[]){
         arreglo[i] = arreglo[iMin];
         arreglo[iMin] = aux;
       }
-      merge=1;
-    }else{
-      k=0;
-      l=N/2;
-      for(int i = 0; i < N; i++){
-        if(arreglo[k] < arreglo[l]){
-          arrAux[i] = arreglo[k];
-          k++;
-        }else{
-          arrAux[i] = arreglo[l];
-          l++;
-        }
-      }
     }
-  }
+
   for (i = 0; i < N; i++) {
-    printf("%d, ", arrAux[i]);
+    printf("%d, ", arreglo[i]);
   }
+
+  printf("\n");
 
   free(arreglo);
   free(arrAux);
   return 0;
+}
+
+/*****************************************************************/
+
+#include <sys/time.h>
+
+double dwalltime()
+{
+	double sec;
+	struct timeval tv;
+
+	gettimeofday(&tv,NULL);
+	sec = tv.tv_sec + tv.tv_usec/1000000.0;
+	return sec;
 }
