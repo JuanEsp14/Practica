@@ -1,2 +1,3 @@
-Ej1a: tiene errores de ejecución
+Ej1a: Para pasar la matriz B hice broadcast que no se podía, es sencillo de cambiar por 
+operaciones punto a punto, prefiero avanzar con otros ejercicios.
 Ej1b: Ejecutar en la facu, a mi me da mejoras pero no tanto

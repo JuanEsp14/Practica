@@ -65,13 +65,13 @@ void master(int N, int cantProcesos){
 	offset=(N*N)/cantProcesos;
 
 	for(i=1; i<cantProcesos;i++){
-		printf("offset: %d\n", offset); 
 		MPI_Send(&A[offset], (N/cantProcesos)*N, MPI_INT, i, 99, MPI_COMM_WORLD);
 		offset+=(N*N)/cantProcesos;
 		
 	}
 
 	//Envia a todos los procesos la matriz B entera (cantidad de elementos de tipo int NxN)
+	//Para este ejercicio en realidad no se deben usar operaciones colectivas
 	MPI_Bcast(B,N*N, MPI_INT,0,MPI_COMM_WORLD);
 
 	
@@ -81,11 +81,9 @@ void master(int N, int cantProcesos){
 	for (i=0; i<N/cantProcesos; i++){
 	  for (j=0; j<N; j++)  {
 	    C[i*N+j] = 0;
-		printf("%d ", A[i*N+j]);
 	    for (k=0; k<N; k++)
 	      C[i*N+j] += A[i*N+k] * B[k*N+j];
 	  }
-		printf("\n");
 	}
 	offset=(N*N)/cantProcesos;
 	for(i=1;i<cantProcesos;i++){
@@ -129,21 +127,19 @@ void procesos(int N, int cantProcesos){
 
 	//Recibe la matriz B entera
 	MPI_Bcast(B,N*N, MPI_INT,0,MPI_COMM_WORLD);
-	printf("\n");
+
 	//Multiplicación de la porción de matriz que le corresponde
 	for (i=0; i<N/cantProcesos; i++){
 	  for (j=0; j<N; j++)  {
 	    C_aux[i*N+j] = 0;
-		printf("%d", A_aux[i*N+j]);
 	    for (k=0; k<N; k++)
 	      C_aux[i*N+j] += A_aux[i*N+k] * B[k*N+j];
 		
 	
 	  }
-		printf("\n");
 	}
 	
-	MPI_Send(A_aux, (N/cantProcesos)*N, MPI_INT, 0, 99, MPI_COMM_WORLD);
+	MPI_Send(C_aux, (N/cantProcesos)*N, MPI_INT, 0, 99, MPI_COMM_WORLD);
 
 }
 
