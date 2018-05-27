@@ -96,7 +96,7 @@ int main(int argc,char*argv[]){
   promLU = promU*promL;
 
 
-//Sumo los 3 valores
+//Sumo los 3 valores multiplicando por el promedio LU
   for(i=0;i<N;i++){
     for(j=0;j<N;j++){
       M[i*N+j]=promLU*(aux1[i*N+j]+aux2[i*N+j]+aux3[i*N+j]);

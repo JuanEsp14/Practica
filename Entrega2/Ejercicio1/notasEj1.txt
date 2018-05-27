@@ -1,0 +1,3 @@
+- Del paralelo no me convence el tema del promedio de U. Porque la envio por broadcast
+ya para la multiplicación, entonces sumo el total de las posiciones en todos los 
+procesos. Es decir todos hacen la misma cuenta (porque la necesitan despues)
