@@ -1,3 +1,1 @@
-- Hay que ver si las variables max_min y totalR, promedioSend están bien o si hay
-otra alternativa mejor.
 - Probar tiempos en la facu
