@@ -11,12 +11,14 @@ int main(int argc, char*argv[]){
   int cantHilos;
   int *arreglo=(int*) malloc(sizeof(int)*N);
   int *arrAux=(int*) malloc(sizeof(int)*N);
+  double timetick;
 
   /* Inicializo el arreglo con un random */
   for (i = 0; i < N; i++) {
       arreglo[i] = (rand() % 500); //Valor entre 0 y 499
   }
 
+  timetick = dwalltime();
   for(int k = 0; k < N; k++){
       for(int i = 0; i < N; i++){
         iMin = i;
@@ -35,6 +37,8 @@ int main(int argc, char*argv[]){
   }
 
   printf("\n");
+
+  printf("Tiempo en segundos %f \n", dwalltime() - timetick);
 
   free(arreglo);
   free(arrAux);
