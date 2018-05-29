@@ -51,12 +51,12 @@ int main(int argc,char*argv[]){
        E[i*N+j]=1;
        F[i*N+j]=1;
        M[i*N+j]=0;
-       if(i>=j){
+       if(i<=j){
         U[i+N*j]=1;
        }else{
         U[i+N*j]=0;
        }
-       if(i<=j){
+       if(i>=j){
         L[i+N*j]=1;
        }else{
         L[i+N*j]=0;
@@ -67,7 +67,7 @@ int main(int argc,char*argv[]){
   printf("Imprimo U\n" );
   for(i=0; i<N; i++){
     for (j=0; j < N; j++){
-      printf("%f ", U[i*N+j] );
+      printf("%f ", U[i+N*j] );
     }
     printf("\n" );
   }
@@ -75,7 +75,7 @@ int main(int argc,char*argv[]){
   printf("Imprimo L\n" );
   for(i=0; i<N; i++){
     for (j=0; j < N; j++){
-      printf("%f ", L[i*N+j] );
+      printf("%f ", L[i+N*j] );
     }
     printf("\n" );
   }

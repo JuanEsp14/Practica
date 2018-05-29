@@ -47,7 +47,7 @@ int main(int argc,char*argv[]){
        D[i*N+j]=1;
 
        M[i*N+j]=0;
-       if(j<=i){
+       if(j>=i){
         U[i+N*j]=1;
        }else{
         U[i+N*j]=0;
@@ -64,7 +64,7 @@ int main(int argc,char*argv[]){
   printf("Imprimo U\n" );
   for(i=0; i<N; i++){
     for (j=0; j < N; j++){
-      printf("%f ", U[i*N+j] );
+      printf("%f ", U[i+N*j] );
     }
     printf("\n" );
   }
