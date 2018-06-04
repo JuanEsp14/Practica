@@ -86,20 +86,19 @@ void master(int N, int cantProcesos){
   }
 
 
-
 //Inicializo promedios de las matrices U y L
   promL = 0;
   promU = 0;
 
   timetick = dwalltime();
 
-  MPI_Scatter(A, (N/cantProcesos)*N, MPI_INT, A_aux, (N/cantProcesos)*N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-  MPI_Bcast(B,N*N, MPI_INT,0,MPI_COMM_WORLD);
-  MPI_Bcast(C,N*N, MPI_INT,0,MPI_COMM_WORLD);
-  MPI_Scatter(D, (N/cantProcesos)*N, MPI_INT, D_aux, (N/cantProcesos)*N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-  MPI_Bcast(U,N*N, MPI_INT,0,MPI_COMM_WORLD);
-  MPI_Scatter(L, (N/cantProcesos)*N, MPI_INT, L_aux, (N/cantProcesos)*N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-  MPI_Scatter(M, (N/cantProcesos)*N, MPI_INT, M_aux, (N/cantProcesos)*N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+  MPI_Scatter(A, (N/cantProcesos)*N, MPI_DOUBLE, A_aux, (N/cantProcesos)*N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+  MPI_Scatter(D, (N/cantProcesos)*N, MPI_DOUBLE, D_aux, (N/cantProcesos)*N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+  MPI_Scatter(L, (N/cantProcesos)*N, MPI_DOUBLE, L_aux, (N/cantProcesos)*N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+  MPI_Scatter(M, (N/cantProcesos)*N, MPI_DOUBLE, M_aux, (N/cantProcesos)*N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+  MPI_Bcast(B,N*N, MPI_DOUBLE,0,MPI_COMM_WORLD);
+  MPI_Bcast(C,N*N, MPI_DOUBLE,0,MPI_COMM_WORLD);
+  MPI_Bcast(U,N*N, MPI_DOUBLE,0,MPI_COMM_WORLD);
 
 
 //Comienzo la multiplicación aux1 = AB, aux2=LC y aux3=DU
@@ -119,6 +118,8 @@ void master(int N, int cantProcesos){
     }
    }
   }
+
+
 
   
 
@@ -153,6 +154,8 @@ void master(int N, int cantProcesos){
   free(D);
   free(L);
   free(U);
+  free(M);
+  free(M_aux);
   free(A_aux);
   free(D_aux);
   free(L_aux);
@@ -187,13 +190,13 @@ void procesos(int N, int cantProcesos){
   aux3=(double*)malloc(sizeof(double)*(N/cantProcesos)*N);
 
 
-  MPI_Scatter(A, (N/cantProcesos)*N, MPI_INT, A_aux, (N/cantProcesos)*N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-  MPI_Bcast(B,N*N, MPI_INT,0,MPI_COMM_WORLD);
-  MPI_Bcast(C,N*N, MPI_INT,0,MPI_COMM_WORLD);
-  MPI_Scatter(D, (N/cantProcesos)*N, MPI_INT, D_aux, (N/cantProcesos)*N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-  MPI_Bcast(U,N*N, MPI_INT,0,MPI_COMM_WORLD);
-  MPI_Scatter(L, (N/cantProcesos)*N, MPI_INT, L_aux, (N/cantProcesos)*N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-  MPI_Scatter(M, (N/cantProcesos)*N, MPI_INT, M_aux, (N/cantProcesos)*N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+  MPI_Scatter(A, (N/cantProcesos)*N, MPI_DOUBLE, A_aux, (N/cantProcesos)*N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+  MPI_Bcast(B,N*N, MPI_DOUBLE,0,MPI_COMM_WORLD);
+  MPI_Bcast(C,N*N, MPI_DOUBLE,0,MPI_COMM_WORLD);
+  MPI_Scatter(D, (N/cantProcesos)*N, MPI_DOUBLE, D_aux, (N/cantProcesos)*N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+  MPI_Bcast(U,N*N, MPI_DOUBLE,0,MPI_COMM_WORLD);
+  MPI_Scatter(L, (N/cantProcesos)*N, MPI_DOUBLE, L_aux, (N/cantProcesos)*N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+  MPI_Scatter(M, (N/cantProcesos)*N, MPI_DOUBLE, M_aux, (N/cantProcesos)*N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
 
 //Comienzo la multiplicación aux1 = AB, aux2=LC y aux3=DU
@@ -237,6 +240,7 @@ void procesos(int N, int cantProcesos){
   free(A_aux);
   free(D_aux);
   free(L_aux);
+  free(M_aux);
   free(aux1);
   free(aux2);
   free(aux3);

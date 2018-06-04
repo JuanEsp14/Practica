@@ -1,3 +1,10 @@
-- Del paralelo no me convence el tema del promedio de U. Porque la envio por broadcast
-ya para la multiplicación, entonces sumo el total de las posiciones en todos los 
-procesos. Es decir todos hacen la misma cuenta (porque la necesitan despues)
+- Dividir las operaciones en mas for e ir comparando. Puede ser mejor hacer mas for por el tema de la cache.
+
+- Sacar ceros de la matriz U
+- Tomar tiempos:
+		antes del scatter, desp del gatter (esta bien hecho)
+		tiempos de comunicacion: llevar una variable que cuente el tiempo q tarda en hacer las comunicaciones
+- Desbalance de carga:
+			Metrica de balance de carga: Balance=promedio de todos los tiempos / tiempo maximo
+			De cada hilo cada vez q arranca y termina tomamos el tiempo (calculamos el maximo y el promedio con los resultados). La metrica va entre 0 y 1. Mas cercano a 1: balanceado (a partir de 70 es bueno)
+			El hibrido entre 2 maquinas, el otro entre 8 procesos (para el calculo de la metrica)
