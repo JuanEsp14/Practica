@@ -13,6 +13,7 @@ int main(int argc,char*argv[]){
   int i, j, k, N;
   int check=1;
   float promL, promU, promLU, divide;
+  unsigned long totalL;
   double timetick;
 
  //Controla los argumentos al programa
@@ -31,7 +32,7 @@ int main(int argc,char*argv[]){
   D=(double*)malloc(sizeof(double)*N*N);
   L=(double*)malloc(sizeof(double)*N*N);
   M=(double*)malloc(sizeof(double)*N*N);
-  U=(double*)malloc(sizeof(double)*N*N);
+  U=(double*)malloc(sizeof(double)*(N/2)*(N+1)); //se alocal sólo los 1
   aux1=(double*)malloc(sizeof(double)*N*N);
   aux2=(double*)malloc(sizeof(double)*N*N);
   aux3=(double*)malloc(sizeof(double)*N*N);
@@ -41,20 +42,16 @@ int main(int argc,char*argv[]){
 //Inicializa la matriz U con unos en el triangulo superior y ceros en el triangulo inferior.
   for(i=0;i<N;i++){
     for(j=0;j<N;j++){
-	     A[i*N+j]=1;
-	     B[i+j*N]=1;
-	     C[i+j*N]=1;
-       D[i*N+j]=1;
-
-       M[i*N+j]=0;
-       if(j>=i){
-        U[i+N*j]=1;
-       }else{
-        U[i+N*j]=0;
-       }
-       if(i>=j){
+      A[i*N+j]=1;
+      B[i+j*N]=1;
+      C[i+j*N]=1;
+      D[i*N+j]=1;
+      M[i*N+j]=0;
+      if(j>=i)
+        U[i+j*(j+1)/2]=1; //no se almacenan los ceros
+      if(i>=j){
         L[i*N+j]=1;
-       }else{
+      }else{
         L[i*N+j]=0;
        }
     }
@@ -69,24 +66,47 @@ int main(int argc,char*argv[]){
 
   timetick = dwalltime();
 
-//Comienzo la multiplicación aux1 = AB, aux2=LC y aux3=DU
+  //Suma el total de la matriz triangular U
   for(i=0;i<N;i++){
-   for(j=0;j<N;j++){
-    aux1[i*N+j]=0;
-    aux2[i*N+j]=0;
-    aux3[i*N+j]=0;
-    if(i>=j)
-      promL = promL + L[i*N+j];
-    if(j>=i)
-      promU = promU + U[i+j*N];
-    for(k= 0; k < N; k++){
-      aux1[i*N+j]=aux1[i*N+j]+A[i*N+k]*B[k+N*j];
-      aux2[i*N+j]=aux2[i*N+j]+L[i*N+k]*C[k+N*j];
-      aux3[i*N+j]=aux3[i*N+j]+D[i*N+k]*U[k+N*j];
+    for(j=i;j<N; j++){
+      promU = promU + U[i+j*(j+1)/2]; //suma todos
     }
-   }
   }
+  //Suma el total de la matriz inferior L
+  for(i=0;i<N;i++){
+    for(j=0;j<N; j++){
+      totalL = totalL + L[i*N+j]; //suma sólo la parte que le toca
+    }
+  }
+  //Multiplica D*U
+  for(i=0;i<N;i++){
+    for(j=0;j<N;j++){
+        aux3[i*N+j]=0;
+        for(k=0; k<=j; k++){
+            aux3[i*N+j]=aux3[i*N+j]+D[i*N+k]*U[k+j*(j+1)/2];
+        }
+    }
+  }
+  //Multiplica L*C
+  for(i=0;i<N;i++){
+    for(j=0;j<N;j++){
+        aux2[i*N+j]=0;
+        for(k=i; k<N; k++){
+          aux2[i*N+j]=aux2[i*N+j]+L[i*N+k]*C[k+N*j];
+        }
 
+    }
+  }
+  //Multiplica A*B
+  for(i=0;i<N;i++){
+    for(j=0;j<N;j++){
+        aux1[i*N+j]=0;
+        for(k=0; k<N; k++){
+          aux1[i*N+j]=aux1[i*N+j]+A[i*N+k]*B[k+N*j];
+        }
+
+    }
+  }
 
 
 //Calculo los promedios
@@ -97,10 +117,16 @@ int main(int argc,char*argv[]){
   promLU = promU*promL;
 
 
-//Sumo los 3 valores multiplicando por el promedio LU
+//Sumo los 3 valores
   for(i=0;i<N;i++){
     for(j=0;j<N;j++){
-      M[i*N+j]=promLU*(aux1[i*N+j]+aux2[i*N+j]+aux3[i*N+j]);
+      M[i*N+j]=aux1[i*N+j]+aux2[i*N+j]+aux3[i*N+j];
+    }
+  }
+//Multiplico por el promedio calculado
+  for(i=0;i<N;i++){
+     for(j=0;j<N;j++){
+       M[i*N+j]=M[i*N+j]*promLU;
     }
   }
 

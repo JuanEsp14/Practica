@@ -14,8 +14,8 @@ void procesos(int N, int cantProcesos);
 
 int main(int argc, char **argv){
   int N, id, cantProcesos;
-  N= atoi(argv[1]);
   MPI_Init(&argc, &argv);
+  N= atoi(argv[1]);
   MPI_Comm_rank(MPI_COMM_WORLD, &id);
   MPI_Comm_size(MPI_COMM_WORLD, &cantProcesos);
  //Controla los argumentos al programa
@@ -37,7 +37,7 @@ void master(int N, int cantProcesos){
   int i, j, k;
   int check=1;
   float promL, promU, promLU, divide;
-  int parcialL;
+  unsigned long parcialL;
   unsigned long totalL;
   double timetick;
 
@@ -67,22 +67,21 @@ void master(int N, int cantProcesos){
 //Inicializa la matriz U con unos en el triangulo superior y ceros en el triangulo inferior.
   for(i=0;i<N;i++){
     for(j=0;j<N;j++){
-	     A[i*N+j]=1;
-	     B[i+j*N]=1;
-	     C[i+j*N]=1;
-       D[i*N+j]=1;
-
-       M[i*N+j]=0;
-       if(j>=i)
+      A[i*N+j]=1;
+      B[i+j*N]=1;
+      C[i+j*N]=1;
+      D[i*N+j]=1;
+      M[i*N+j]=0;
+      if(j>=i)
         U[i+j*(j+1)/2]=1; //no se almacenan los ceros
-
-       if(i>=j){
+      if(i>=j){
         L[i*N+j]=1;
-       }else{
+      }else{
         L[i*N+j]=0;
        }
     }
   }
+
 
 
 //Inicializo promedios de las matrices U y L
@@ -147,7 +146,7 @@ void master(int N, int cantProcesos){
 
 //Calculo los promedios
   divide = 1.0/(N*N);
-  MPI_Allreduce(&parcialL, &totalL, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+  MPI_Allreduce(&parcialL, &totalL, 1, MPI_UNSIGNED_LONG, MPI_SUM, MPI_COMM_WORLD);
   promL = totalL*divide;
   promU = promU*divide;
   promLU = promU*promL;
@@ -158,23 +157,17 @@ void master(int N, int cantProcesos){
       M_aux[i*N+j]=aux1[i*N+j]+aux2[i*N+j]+aux3[i*N+j];
     }
   }
-
+//Multiplico por el promedio calculado
   for(i=0;i<N/cantProcesos;i++){
      for(j=0;j<N;j++){
        M_aux[i*N+j]=M_aux[i*N+j]*promLU;
     }
   }
+
+//Reuno en M la matriz total
   MPI_Gather(M_aux, (N/cantProcesos)*N, MPI_DOUBLE, M, (N/cantProcesos)*N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
   printf("Tiempo en segundos %f \n", dwalltime() - timetick);
  
-  printf("Matriz resultado:\n");
-  for(i=0;i<N;i++){
-    for(j=0;j<N;j++){
-      printf("%f ", M[i*N+j] );
-    }
-    printf("\n");
-  }
-
   free(A);
   free(B);
   free(C);
@@ -193,18 +186,16 @@ void master(int N, int cantProcesos){
 
 
 void procesos(int N, int cantProcesos){
- double *A,*B,*C,*D, *L, *M, *U, *A_aux, *D_aux, *L_aux, *M_aux, *aux1, *aux2, *aux3;
+  double *A,*B,*C,*D, *L, *M, *U, *A_aux, *D_aux, *L_aux, *M_aux, *aux1, *aux2, *aux3;
   int i, j, k;
   float promL, promU, promLU, divide;
   unsigned long totalL;
-  int parcialL;
+  unsigned long parcialL;
 
 //Inicializo promedios de las matrices U y L
   promU = 0;
   parcialL=0;
 
-
-  divide=0;
 
  //Aloca memoria para las matrices
   B=(double*)malloc(sizeof(double)*N*N);
@@ -239,6 +230,7 @@ void procesos(int N, int cantProcesos){
       parcialL = parcialL + L_aux[i*N+j]; //suma sólo la parte que le toca
     }
   }
+
   //Multiplica D_aux*U
   for(i=0;i<N/cantProcesos;i++){
     for(j=0;j<N;j++){
@@ -269,12 +261,9 @@ void procesos(int N, int cantProcesos){
     }
   }
 
-
-  
-
 //Calculo los promedios
   divide = 1.0/(N*N);
-  MPI_Allreduce(&parcialL, &totalL, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+  MPI_Allreduce(&parcialL, &totalL, 1, MPI_UNSIGNED_LONG, MPI_SUM, MPI_COMM_WORLD);
   promL = totalL*divide;
   promU = promU*divide;
   promLU = promU*promL;
@@ -286,12 +275,13 @@ void procesos(int N, int cantProcesos){
     }
   }
 
-  
+//Multiplico por el producto de promedios LU  
   for(i=0;i<N/cantProcesos;i++){
      for(j=0;j<N;j++){
        M_aux[i*N+j]=M_aux[i*N+j]*promLU;
     }
   }
+//Reuno en M la matriz total
   MPI_Gather(M_aux, (N/cantProcesos)*N, MPI_DOUBLE, M, (N/cantProcesos)*N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
   
   free(B);
