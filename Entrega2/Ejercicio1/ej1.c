@@ -122,26 +122,27 @@ void master(int N, int cantProcesos){
     }
   }
   //Multiplica L_aux*C
-  printf("L*C\n");
   for(i=0;i<N/cantProcesos;i++){
     for(j=0;j<N;j++){
         aux2[i*N+j]=0;
-        for(k=0; k<j; k++){
+        for(k=i; k<N; k++){
           aux2[i*N+j]=aux2[i*N+j]+L_aux[i*N+k]*C[k+N*j];
         }
-        printf("%f ", aux2[i*N+j]);
 
     }
-    printf("\n");
   }
   //Multiplica A_aux*B
+  printf("A*B\n");
   for(i=0;i<N/cantProcesos;i++){
     for(j=0;j<N;j++){
         aux1[i*N+j]=0;
         for(k=0; k<N; k++){
           aux1[i*N+j]=aux1[i*N+j]+A_aux[i*N+k]*B[k+N*j];
         }
+        printf("%f ", aux1[i*N+j]);
+
     }
+    printf("\n");
   }
 
 
@@ -261,26 +262,27 @@ void procesos(int N, int cantProcesos){
     }
   }
   //Multiplica L_aux*C
-  printf("L*C\n");
   for(i=0;i<N/cantProcesos;i++){
     for(j=0;j<N;j++){
         aux2[i*N+j]=0;
-        for(k=0; k<j; k++){
+        for(k=i; k<N; k++){
           aux2[i*N+j]=aux2[i*N+j]+L_aux[i*N+k]*C[k+N*j];
         }
-        printf("%f ", aux2[i*N+j]);
 
     }
-    printf("\n");
   }
   //Multiplica A_aux*B
+  printf("A*B\n");
   for(i=0;i<N/cantProcesos;i++){
     for(j=0;j<N;j++){
         aux1[i*N+j]=0;
         for(k=0; k<N; k++){
           aux1[i*N+j]=aux1[i*N+j]+A_aux[i*N+k]*B[k+N*j];
         }
+        printf("%f ", aux1[i*N+j]);
+
     }
+    printf("\n");
   }
 
 
