@@ -132,17 +132,14 @@ void master(int N, int cantProcesos){
     }
   }
   //Multiplica A_aux*B
-  printf("A*B\n");
   for(i=0;i<N/cantProcesos;i++){
     for(j=0;j<N;j++){
         aux1[i*N+j]=0;
         for(k=0; k<N; k++){
           aux1[i*N+j]=aux1[i*N+j]+A_aux[i*N+k]*B[k+N*j];
         }
-        printf("%f ", aux1[i*N+j]);
 
     }
-    printf("\n");
   }
 
 
@@ -152,11 +149,8 @@ void master(int N, int cantProcesos){
   divide = 1.0/(N*N);
   MPI_Allreduce(&parcialL, &totalL, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
   promL = totalL*divide;
-  printf("Promedio L master: %f\n",promL );
   promU = promU*divide;
-  printf("Promedio U master: %f\n", promU);
   promLU = promU*promL;
-  printf("promLU master: %f\n", promLU );
 
 //Sumo los 3 valores
   for(i=0;i<N/cantProcesos;i++){
@@ -164,14 +158,7 @@ void master(int N, int cantProcesos){
       M_aux[i*N+j]=aux1[i*N+j]+aux2[i*N+j]+aux3[i*N+j];
     }
   }
-  printf("Matriz aux:\n");
-  for(i=0;i<N/cantProcesos;i++){
-    for(j=0;j<N;j++){
-      printf("%f ", M_aux[i*N+j] );
-    }
-    printf("\n");
-  }
-  
+
   for(i=0;i<N/cantProcesos;i++){
      for(j=0;j<N;j++){
        M_aux[i*N+j]=M_aux[i*N+j]*promLU;
@@ -272,17 +259,14 @@ void procesos(int N, int cantProcesos){
     }
   }
   //Multiplica A_aux*B
-  printf("A*B\n");
   for(i=0;i<N/cantProcesos;i++){
     for(j=0;j<N;j++){
         aux1[i*N+j]=0;
         for(k=0; k<N; k++){
           aux1[i*N+j]=aux1[i*N+j]+A_aux[i*N+k]*B[k+N*j];
         }
-        printf("%f ", aux1[i*N+j]);
 
     }
-    printf("\n");
   }
 
 
@@ -292,11 +276,8 @@ void procesos(int N, int cantProcesos){
   divide = 1.0/(N*N);
   MPI_Allreduce(&parcialL, &totalL, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
   promL = totalL*divide;
-  printf("Promedio L: %f\n",promL );
   promU = promU*divide;
-  printf("Promedio U: %f\n", promU);
   promLU = promU*promL;
-  printf("promLU: %f\n", promLU );
 
 //Sumo los 3 valores
   for(i=0;i<N/cantProcesos;i++){
@@ -304,13 +285,7 @@ void procesos(int N, int cantProcesos){
       M_aux[i*N+j]=aux1[i*N+j]+aux2[i*N+j]+aux3[i*N+j];
     }
   }
-  printf("Matriz aux:\n");
-  for(i=0;i<N/cantProcesos;i++){
-    for(j=0;j<N;j++){
-      printf("%f ", M_aux[i*N+j] );
-    }
-    printf("\n");
-  }
+
   
   for(i=0;i<N/cantProcesos;i++){
      for(j=0;j<N;j++){

@@ -60,39 +60,6 @@ int main(int argc,char*argv[]){
     }
   }
 
-  printf("Acceso por filas\n" );
-  printf("Imprimo U\n" );
-  for(i=0; i<N; i++){
-    for (j=0; j < N; j++){
-      printf("%f ", U[i+N*j] );
-    }
-    printf("\n" );
-  }
-
-  printf("Imprimo L\n" );
-  for(i=0; i<N; i++){
-    for (j=0; j < N; j++){
-      printf("%f ", L[i*N+j] );
-    }
-    printf("\n" );
-}
-
-printf("Acceso por columnas\n" );
-printf("Imprimo U\n" );
-for(i=0; i<N; i++){
-  for (j=0; j < N; j++){
-    printf("%f ", U[i*N+j] );
-  }
-  printf("\n" );
-}
-
-printf("Imprimo L\n" );
-for(i=0; i<N; i++){
-  for (j=0; j < N; j++){
-    printf("%f ", L[i+N*j] );
-  }
-  printf("\n" );
-}
 
 
 
