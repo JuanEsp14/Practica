@@ -14,6 +14,7 @@ void procesos(int N, int cantProcesos);
 
 int main(int argc, char **argv){
   int N, id, cantProcesos;
+  double time;
   MPI_Init(&argc, &argv);
   N= atoi(argv[1]);
   MPI_Comm_rank(MPI_COMM_WORLD, &id);
@@ -22,12 +23,18 @@ int main(int argc, char **argv){
   if (argc < 2){
     printf("\n Faltan argumentos:: N dimension de la matriz\n");
   }
-  if(id==0)
+  if(id==0){
+    time = dwalltime();
     master(N, cantProcesos);
-  else
+    printf("Tiempo proceso %d: %f \n", id, dwalltime() - time);
+  }
+  else{
+    time = dwalltime();    
     procesos(N, cantProcesos);
-    MPI_Finalize();
-    return 0;
+    printf("Tiempo proceso %d: %f \n", id, dwalltime() - time);
+  }
+  MPI_Finalize();
+  return 0;
 
 }
 
@@ -40,9 +47,8 @@ void master(int N, int cantProcesos){
   unsigned long parcialL;
   unsigned long totalL;
   double timetick;
-
-
-
+  double timeComunic;
+  double time;
 
   divide=0;
 
@@ -89,7 +95,7 @@ void master(int N, int cantProcesos){
   parcialL=0;
 
   timetick = dwalltime();
-
+  time = dwalltime();
   MPI_Scatter(A, (N/cantProcesos)*N, MPI_DOUBLE, A_aux, (N/cantProcesos)*N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
   MPI_Scatter(D, (N/cantProcesos)*N, MPI_DOUBLE, D_aux, (N/cantProcesos)*N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
   MPI_Scatter(L, (N/cantProcesos)*N, MPI_DOUBLE, L_aux, (N/cantProcesos)*N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
@@ -97,6 +103,7 @@ void master(int N, int cantProcesos){
   MPI_Bcast(B,N*N, MPI_DOUBLE,0,MPI_COMM_WORLD);
   MPI_Bcast(C,N*N, MPI_DOUBLE,0,MPI_COMM_WORLD);
   MPI_Bcast(U,(N/2)*(N+1), MPI_DOUBLE,0,MPI_COMM_WORLD);
+  timeComunic = dwalltime() - time;
 
 
   //Suma el total de la matriz triangular U
@@ -146,7 +153,9 @@ void master(int N, int cantProcesos){
 
 //Calculo los promedios
   divide = 1.0/(N*N);
+  time = dwalltime();
   MPI_Allreduce(&parcialL, &totalL, 1, MPI_UNSIGNED_LONG, MPI_SUM, MPI_COMM_WORLD);
+  timeComunic=+(dwalltime()-time);
   promL = totalL*divide;
   promU = promU*divide;
   promLU = promU*promL;
@@ -165,9 +174,11 @@ void master(int N, int cantProcesos){
   }
 
 //Reuno en M la matriz total
+  time = dwalltime();
   MPI_Gather(M_aux, (N/cantProcesos)*N, MPI_DOUBLE, M, (N/cantProcesos)*N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-  printf("Tiempo en segundos %f \n", dwalltime() - timetick);
- 
+  timeComunic=+(dwalltime()-time);
+  printf("Tiempo total en segundos %f \n", dwalltime() - timetick);
+  printf("Tiempo de las comunicaciones en segundos %f\n", timeComunic);
   free(A);
   free(B);
   free(C);
