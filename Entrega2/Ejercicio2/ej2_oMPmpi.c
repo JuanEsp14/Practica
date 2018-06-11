@@ -14,7 +14,7 @@ void procesos(int N, int cantProcesos);
 
 int main(int argc,char*argv[]){
 
-  int i, id, cantProcesos, N;
+  int i, id, cantProcesos, cantHilos, N;
   double time;
   MPI_Init(&argc, &argv);
   MPI_Comm_rank(MPI_COMM_WORLD, &id);
@@ -31,7 +31,7 @@ int main(int argc,char*argv[]){
   omp_set_num_threads(cantHilos);
 
   if(id==0){
-    time = dewalltime();
+    time = dwalltime();
     master(N, cantProcesos);
     printf("Tiempo Master %d: %f \n", id, dwalltime() - time);
   }
@@ -47,9 +47,8 @@ int main(int argc,char*argv[]){
 
 void master(int N, int cantProcesos){
   double *A,*B,*C,*D, *L, *M, *U, *A_aux, *D_aux, *L_aux, *M_aux, *aux1, *aux2, *aux3;
-  int i, j, k;
-  int check=1;
-  float promL, promU, promLU, divide, distribuido, inicio, fin;
+  int i, j, k, distribuido, check=1;
+  float promL, promU, promLU, divide;
   unsigned long parcialL, totalL;
   double timetick ,timeComunic, time;
 
@@ -108,13 +107,10 @@ void master(int N, int cantProcesos){
 
   timeComunic = dwalltime() - time;
 
-
-  inicio = id * distribuido;
-  fin = (id + 1) * distribuido;
-
   #pragma omp parallel
   {
     //Multiplica D_aux*U
+    printf("Proceso de MPI rank %d thread %d\n", 0, omp_get_thread_num());
     #pragma omp for private(i,j,k) collapse(2)
     for(i=0;i<distribuido;i++){
       for(j=0;j<N;j++){
@@ -219,8 +215,8 @@ void master(int N, int cantProcesos){
 
 void procesos(int N, int cantProcesos){
   double *A,*B,*C,*D, *L, *M, *U, *A_aux, *D_aux, *L_aux, *M_aux, *aux1, *aux2, *aux3;
-  int i, j, k, id, inicio, fin;
-  float promL, promU, promLU, divide, distribuido;
+  int i, j, k, id, distribuido;
+  float promL, promU, promLU, divide;
   unsigned long totalL, parcialL;
   MPI_Comm_rank(MPI_COMM_WORLD, &id);
 
@@ -250,12 +246,10 @@ void procesos(int N, int cantProcesos){
   MPI_Bcast(C,N*N, MPI_DOUBLE,0,MPI_COMM_WORLD);
   MPI_Bcast(U,(N/2)*(N+1), MPI_DOUBLE,0,MPI_COMM_WORLD);
 
-  inicio = id * distribuido;
-  fin = (id + 1) * distribuido;
-
   #pragma omp parallel
   {
     //Multiplica D_aux*U
+    printf("Proceso de MPI rank %d thread %d\n", id, omp_get_thread_num());
     #pragma omp for private(i,j,k) collapse(2)
     for(i=0;i<distribuido;i++){
       for(j=0;j<N;j++){

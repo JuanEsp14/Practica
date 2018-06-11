@@ -32,7 +32,7 @@ int main(int argc,char*argv[]){
   omp_set_num_threads(cantHilos);
 
   if(id==0){
-    time = dewalltime();
+    time = dwalltime();
     master(N, cantProcesos);
     printf("Tiempo Master %d: %f \n", id, dwalltime() - time);
   }
@@ -50,7 +50,7 @@ void master(int N, int cantProcesos){
   double *A,*B,*C,*D, *L, *M, *U, *A_aux, *D_aux, *L_aux, *M_aux, *aux1, *aux2, *aux3;
   int i, j, k;
   int check=1;
-  float promL, promU, promLU, divide, distribuido, inicio, fin;
+  float promL, promU, promLU, divide, distribuido;
   unsigned long parcialL, totalL;
   double timetick ,timeComunic, time;
 
@@ -109,11 +109,7 @@ void master(int N, int cantProcesos){
 
   timeComunic = dwalltime() - time;
 
-
-  inicio = id * distribuido;
-  fin = (id + 1) * distribuido;
-
-  multYprom(N, distribuido, promU,parcialL, *L, *U, *A_aux, *D_aux, *L_aux, *aux1, *aux2, *aux3);
+  multYprom(N, distribuido, promU,parcialL, L, U, A_aux, D_aux, L_aux, aux1, aux2, aux3);
 
   //Calculo los promedios
   time = dwalltime();
@@ -124,7 +120,7 @@ void master(int N, int cantProcesos){
   promU = promU*divide;
   promLU = promU*promL;
 
-  suma(N, distribuido, promLU, *M_aux, aux1, aux2, aux3);
+  suma(N, distribuido, promLU, M_aux, aux1, aux2, aux3);
 
   time = dwalltime();
   //Reuno en M la matriz total
@@ -185,7 +181,7 @@ void procesos(int N, int cantProcesos){
   inicio = id * distribuido;
   fin = (id + 1) * distribuido;
 
-  multYprom(N, distribuido, promU,parcialL, *L, *U, *A_aux, *D_aux, *L_aux, *aux1, *aux2, *aux3);
+  multYprom(N, distribuido, promU,parcialL, L, U, A_aux, D_aux, L_aux, aux1, aux2, aux3);
 
   //Calculo los promedios
   MPI_Allreduce(&parcialL, &totalL, 1, MPI_UNSIGNED_LONG, MPI_SUM, MPI_COMM_WORLD);
@@ -194,7 +190,7 @@ void procesos(int N, int cantProcesos){
   promU = promU*divide;
   promLU = promU*promL;
 
-  suma(N, distribuido, promLU, *M_aux, aux1, aux2, aux3);
+  suma(N, distribuido, promLU, M_aux, aux1, aux2, aux3);
 
   //Reuno en M la matriz total
   MPI_Gather(M_aux, (distribuido)*N, MPI_DOUBLE, M, (distribuido)*N, MPI_DOUBLE, 0, MPI_COMM_WORLD);

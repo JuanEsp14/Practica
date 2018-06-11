@@ -5,7 +5,7 @@ void multYprom(int N, float distribuido, float *promU,
               float *parcialL, double * L, double *U,
               double *A_aux, double * D_aux, double * L_aux,
               double * aux1, double * aux2, double *aux3){
-  int i, j, k
+  int i, j, k;
   #pragma omp parallel
   {
     //Multiplica D_aux*U
