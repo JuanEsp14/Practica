@@ -1,3 +1,7 @@
+//Compilar              mpicc -fopenmp -o ej2 ej2_oMPmpi.c 
+//Ejecutar 1 máquina        mpirun -np numProceses ej2 N numHilos
+//Ejecutar 2 máquinas       mpirun -np numProceses -machinefile machine_file ej2 N numHilos
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <mpi.h>
@@ -9,7 +13,7 @@
 double dwalltime();
 
 void master(int N, int cantProcesos);
-void procesos(int N, int cantProcesos);
+void procesos(int N, int cantProcesos, int rank);
 
 
 int main(int argc,char*argv[]){
@@ -37,7 +41,7 @@ int main(int argc,char*argv[]){
   }
   else{
     time = dwalltime();
-    procesos(N, cantProcesos);
+    procesos(N, cantProcesos, id);
     printf("Tiempo proceso %d: %f \n", id, dwalltime() - time);
   }
 
@@ -47,15 +51,21 @@ int main(int argc,char*argv[]){
 
 void master(int N, int cantProcesos){
   double *A,*B,*C,*D, *L, *M, *U, *A_aux, *D_aux, *L_aux, *M_aux, *aux1, *aux2, *aux3;
-  int i, j, k, distribuido, check=1;
+  int i, j, k, distribuido, inicio, fin, tamanoBloque, check=1;
   float promL, promU, promLU, divide;
-  unsigned long parcialL, totalL;
+  unsigned long parcialL, parcialU, totalU, totalL;
   double timetick ,timeComunic, time;
 
   //Inicializo promedios de las matrices U y L
   promU = 0;
   parcialL=0;
+  parcialU = 0;
+  totalL = 0;
+  totalU = 0;
   divide=0;
+  inicio = 0;
+  fin = 0;
+  tamanoBloque = 0;
   distribuido = N/cantProcesos;
 
   //Aloca memoria para las matrices
@@ -95,22 +105,32 @@ void master(int N, int cantProcesos){
   }
 
   timetick = dwalltime();
+
   time = dwalltime();
-
   MPI_Scatter(A, (distribuido)*N, MPI_DOUBLE, A_aux, (distribuido)*N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+  timeComunic += (dwalltime() -time);
+  time = dwalltime();
   MPI_Scatter(D, (distribuido)*N, MPI_DOUBLE, D_aux, (distribuido)*N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+  timeComunic += (dwalltime() -time);
+  time = dwalltime();
   MPI_Scatter(L, (distribuido)*N, MPI_DOUBLE, L_aux, (distribuido)*N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+  timeComunic += (dwalltime() -time);
+  time = dwalltime();
   MPI_Scatter(M, (distribuido)*N, MPI_DOUBLE, M_aux, (distribuido)*N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+  timeComunic += (dwalltime() -time);
+  time = dwalltime();
   MPI_Bcast(B,N*N, MPI_DOUBLE,0,MPI_COMM_WORLD);
+  timeComunic += (dwalltime() -time);
+  time = dwalltime();
   MPI_Bcast(C,N*N, MPI_DOUBLE,0,MPI_COMM_WORLD);
+  timeComunic += (dwalltime() -time);
+  time = dwalltime();
   MPI_Bcast(U,(N/2)*(N+1), MPI_DOUBLE,0,MPI_COMM_WORLD);
-
-  timeComunic = dwalltime() - time;
+  timeComunic += (dwalltime() -time);
 
   #pragma omp parallel
   {
     //Multiplica D_aux*U
-    printf("Proceso de MPI rank %d thread %d\n", 0, omp_get_thread_num());
     #pragma omp for private(i,j,k) collapse(2)
     for(i=0;i<distribuido;i++){
       for(j=0;j<N;j++){
@@ -145,11 +165,16 @@ void master(int N, int cantProcesos){
       }
     }
 
+    inicio = 0;
+    tamanoBloque = ((N/2)*(N+1))/(cantProcesos);
+    fin = tamanoBloque;  
+    
+
     //Suma el total de la matriz triangular U
-    #pragma omp for reduction(+:promU) private(i,j) collapse(2)
-    for(i=0;i<N;i++){
+    #pragma omp for reduction(+:parcialU) private(i,j) collapse(1)
+    for(i=inicio;i<fin;i++){
       for(j=i;j<N; j++){
-        promU = promU + U[i+j*(j+1)/2]; //suma todos
+        parcialU = parcialU + U[i+j*(j+1)/2]; //suma todos
       }
     }
 
@@ -166,9 +191,12 @@ void master(int N, int cantProcesos){
   time = dwalltime();
   MPI_Allreduce(&parcialL, &totalL, 1, MPI_UNSIGNED_LONG, MPI_SUM, MPI_COMM_WORLD);
   timeComunic += (dwalltime() -time);
+  time = dwalltime();
+  MPI_Allreduce(&parcialU, &totalU, 1, MPI_UNSIGNED_LONG, MPI_SUM, MPI_COMM_WORLD);
+  timeComunic += (dwalltime() -time);
   divide = 1.0/(N*N);
   promL = totalL*divide;
-  promU = promU*divide;
+  promU = totalU*divide;
   promLU = promU*promL;
 
   #pragma omp parallel
@@ -213,17 +241,22 @@ void master(int N, int cantProcesos){
   free(aux3);
 }
 
-void procesos(int N, int cantProcesos){
+void procesos(int N, int cantProcesos,int rank){
   double *A,*B,*C,*D, *L, *M, *U, *A_aux, *D_aux, *L_aux, *M_aux, *aux1, *aux2, *aux3;
-  int i, j, k, id, distribuido;
+  int i, j, k, inicio,fin, distribuido, tamanoBloque;
   float promL, promU, promLU, divide;
-  unsigned long totalL, parcialL;
-  MPI_Comm_rank(MPI_COMM_WORLD, &id);
+  unsigned long totalU, parcialU, totalL, parcialL;
 
   //Inicializo promedios de las matrices U y L
   promU = 0;
   parcialL = 0;
+  totalL = 0;
+  parcialU = 0;
+  totalU = 0;
   divide = 0;
+  inicio = 0;
+  fin = 0;
+  tamanoBloque = 0;
   distribuido = N/cantProcesos;
 
   //Aloca memoria para las matrices
@@ -249,7 +282,6 @@ void procesos(int N, int cantProcesos){
   #pragma omp parallel
   {
     //Multiplica D_aux*U
-    printf("Proceso de MPI rank %d thread %d\n", id, omp_get_thread_num());
     #pragma omp for private(i,j,k) collapse(2)
     for(i=0;i<distribuido;i++){
       for(j=0;j<N;j++){
@@ -284,11 +316,20 @@ void procesos(int N, int cantProcesos){
       }
     }
 
+    tamanoBloque = ((N/2)*(N+1))/(cantProcesos);
+    inicio = rank*tamanoBloque;
+    if( rank == (cantProcesos-1)){
+      fin = (N/2)*(N+1);
+    }else{
+      fin = (rank+1)*tamanoBloque;     
+    }
+    
+
     //Suma el total de la matriz triangular U
-    #pragma omp for reduction(+:promU) private(i,j) collapse(2)
-    for(i=0;i<N;i++){
+    #pragma omp for reduction(+:parcialU) private(i,j) collapse(1)
+    for(i=inicio;i<fin;i++){
       for(j=i;j<N; j++){
-        promU = promU + U[i+j*(j+1)/2]; //suma todos
+        parcialU = parcialU + U[i+j*(j+1)/2]; //suma todos
       }
     }
 
@@ -303,9 +344,10 @@ void procesos(int N, int cantProcesos){
 
   //Calculo los promedios
   MPI_Allreduce(&parcialL, &totalL, 1, MPI_UNSIGNED_LONG, MPI_SUM, MPI_COMM_WORLD);
+  MPI_Allreduce(&parcialU, &totalU, 1, MPI_UNSIGNED_LONG, MPI_SUM, MPI_COMM_WORLD);
   divide = 1.0/(N*N);
   promL = totalL*divide;
-  promU = promU*divide;
+  promU = totalU*divide;
   promLU = promU*promL;
 
   #pragma omp parallel
@@ -326,9 +368,9 @@ void procesos(int N, int cantProcesos){
       }
     }
   }
+
   //Reuno en M la matriz total
   MPI_Gather(M_aux, (distribuido)*N, MPI_DOUBLE, M, (distribuido)*N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-
 
   free(B);
   free(C);

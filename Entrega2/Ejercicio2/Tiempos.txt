@@ -1,0 +1,16 @@
+paralelos18@postgrado18:~/Escritorio/Practica-master/Entrega2/Ejercicio2$ mpirun -np 2 -machinefile machine_file ej2 512 4 
+Tiempo total en segundos 0.410700 
+Tiempo de las comunicaciones en segundos 0.096494
+Tiempo proceso 1: 0.426094 
+Tiempo Master 0: 0.426933 
+paralelos18@postgrado18:~/Escritorio/Practica-master/Entrega2/Ejercicio2$ mpirun -np 2 -machinefile machine_file ej2 1024 4 
+Tiempo total en segundos 2.862949 
+Tiempo de las comunicaciones en segundos 0.383612
+Tiempo proceso 1: 2.914902 
+Tiempo Master 0: 2.915581 
+paralelos18@postgrado18:~/Escritorio/Practica-master/Entrega2/Ejercicio2$ mpirun -np 2 -machinefile machine_file ej2 2048 4 
+Tiempo total en segundos 21.340013 
+Tiempo de las comunicaciones en segundos 1.512144
+Tiempo proceso 1: 21.530129 
+Tiempo Master 0: 21.531706 
+
