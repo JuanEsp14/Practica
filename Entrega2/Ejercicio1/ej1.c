@@ -1,6 +1,6 @@
 /**
 - Compilar: mpicc -o mpi_ej1 mpi_ej1.c
-- Ejecutar: mpirun -np CANTIDAD DE PROCESOS mpi_ej1 N
+- Ejecutar: mpirun -np CANTidAD DE PROCESOS mpi_ej1 N
 **/
 #include <stdio.h>
 #include <stdlib.h>
@@ -9,8 +9,8 @@
 
 /* Time in seconds from some point in the past */
 double dwalltime();
-void master(int N, int cantProcesos);
-void procesos(int N, int cantProcesos);
+void master(int N, int cantProcesos, int id);
+void procesos(int N, int cantProcesos, int id);
 
 int main(int argc, char **argv){
   int N, id, cantProcesos;
@@ -25,12 +25,12 @@ int main(int argc, char **argv){
   }
   if(id==0){
     time = dwalltime();
-    master(N, cantProcesos);
+    master(N, cantProcesos, id);
     printf("Tiempo proceso %d: %f \n", id, dwalltime() - time);
   }
   else{
     time = dwalltime();    
-    procesos(N, cantProcesos);
+    procesos(N, cantProcesos, id);
     printf("Tiempo proceso %d: %f \n", id, dwalltime() - time);
   }
   MPI_Finalize();
@@ -39,13 +39,12 @@ int main(int argc, char **argv){
 }
 
 
-void master(int N, int cantProcesos){
+void master(int N, int cantProcesos, int id){
   double *A,*B,*C,*D, *L, *M, *U, *A_aux, *D_aux, *L_aux, *M_aux, *aux1, *aux2, *aux3;
-  int i, j, k;
+  int i, j, k, inicio, fin, tamanoBloque, distribuido;
   int check=1;
   float promL, promU, promLU, divide;
-  unsigned long parcialL;
-  unsigned long totalL;
+  unsigned long totalU, parcialU, totalL, parcialL;
   double timetick;
   double timeComunic;
   double time;
@@ -90,28 +89,55 @@ void master(int N, int cantProcesos){
 
 
 
-//Inicializo promedios de las matrices U y L
+  //Inicializo promedios de las matrices U y L, totales, parciales, inicio, fin y tamaño de bloque
   promU = 0;
   parcialL=0;
+  parcialU = 0;
+  totalL = 0;
+  totalU = 0;
+  divide=0;
+  inicio = 0;
+  fin = 0;
+  tamanoBloque = 0;
+  distribuido = N/cantProcesos;
 
   timetick = dwalltime();
   time = dwalltime();
-  MPI_Scatter(A, (N/cantProcesos)*N, MPI_DOUBLE, A_aux, (N/cantProcesos)*N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-  MPI_Scatter(D, (N/cantProcesos)*N, MPI_DOUBLE, D_aux, (N/cantProcesos)*N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-  MPI_Scatter(L, (N/cantProcesos)*N, MPI_DOUBLE, L_aux, (N/cantProcesos)*N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-  MPI_Scatter(M, (N/cantProcesos)*N, MPI_DOUBLE, M_aux, (N/cantProcesos)*N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+  MPI_Scatter(A, (distribuido)*N, MPI_DOUBLE, A_aux, (distribuido)*N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+  timeComunic += (dwalltime() -time);
+  time = dwalltime();
+  MPI_Scatter(D, (distribuido)*N, MPI_DOUBLE, D_aux, (distribuido)*N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+  timeComunic += (dwalltime() -time);
+  time = dwalltime();
+  MPI_Scatter(L, (distribuido)*N, MPI_DOUBLE, L_aux, (distribuido)*N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+  timeComunic += (dwalltime() -time);
+  time = dwalltime();
+  MPI_Scatter(M, (distribuido)*N, MPI_DOUBLE, M_aux, (distribuido)*N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+  timeComunic += (dwalltime() -time);
+  time = dwalltime();
   MPI_Bcast(B,N*N, MPI_DOUBLE,0,MPI_COMM_WORLD);
+  timeComunic += (dwalltime() -time);
+  time = dwalltime();
   MPI_Bcast(C,N*N, MPI_DOUBLE,0,MPI_COMM_WORLD);
+  timeComunic += (dwalltime() -time);
+  time = dwalltime();
   MPI_Bcast(U,(N/2)*(N+1), MPI_DOUBLE,0,MPI_COMM_WORLD);
-  timeComunic = dwalltime() - time;
+  timeComunic += (dwalltime() -time);
 
+
+  inicio = 0;
+  tamanoBloque = ((N/2)*(N+1))/(cantProcesos);
+  fin = tamanoBloque;  
+    
 
   //Suma el total de la matriz triangular U
-  for(i=0;i<N;i++){
+  //Cada proceso suma una parte
+  for(i=inicio;i<fin;i++){
     for(j=i;j<N; j++){
-      promU = promU + U[i+j*(j+1)/2]; //suma todos
+      parcialU = parcialU + U[i+j*(j+1)/2]; 
     }
   }
+
   //Suma el total de la matriz inferior L
   for(i=0;i<N/cantProcesos;i++){
     for(j=0;j<N; j++){
@@ -148,16 +174,16 @@ void master(int N, int cantProcesos){
     }
   }
 
-
-  
-
-//Calculo los promedios
-  divide = 1.0/(N*N);
+  //Calculo los promedios
   time = dwalltime();
   MPI_Allreduce(&parcialL, &totalL, 1, MPI_UNSIGNED_LONG, MPI_SUM, MPI_COMM_WORLD);
-  timeComunic=+(dwalltime()-time);
+  timeComunic += (dwalltime() -time);
+  time = dwalltime();
+  MPI_Allreduce(&parcialU, &totalU, 1, MPI_UNSIGNED_LONG, MPI_SUM, MPI_COMM_WORLD);
+  timeComunic += (dwalltime() -time);
+  divide = 1.0/(N*N);
   promL = totalL*divide;
-  promU = promU*divide;
+  promU = totalU*divide;
   promLU = promU*promL;
 
 //Sumo los 3 valores
@@ -196,16 +222,23 @@ void master(int N, int cantProcesos){
 }
 
 
-void procesos(int N, int cantProcesos){
+void procesos(int N, int cantProcesos, int id){
   double *A,*B,*C,*D, *L, *M, *U, *A_aux, *D_aux, *L_aux, *M_aux, *aux1, *aux2, *aux3;
-  int i, j, k;
+  int i, j, k, inicio, fin, tamanoBloque, distribuido;
   float promL, promU, promLU, divide;
-  unsigned long totalL;
-  unsigned long parcialL;
+  unsigned long totalU, parcialU, totalL, parcialL;
 
-//Inicializo promedios de las matrices U y L
+  //Inicializo promedios de las matrices U y L, totales, parciales, inicio, fin y tamaño de bloque
   promU = 0;
-  parcialL=0;
+  parcialL = 0;
+  totalL = 0;
+  parcialU = 0;
+  totalU = 0;
+  divide = 0;
+  inicio = 0;
+  fin = 0;
+  tamanoBloque = 0;
+  distribuido = N/cantProcesos;
 
 
  //Aloca memoria para las matrices
@@ -228,12 +261,20 @@ void procesos(int N, int cantProcesos){
   MPI_Bcast(C,N*N, MPI_DOUBLE,0,MPI_COMM_WORLD);
   MPI_Bcast(U,(N/2)*(N+1), MPI_DOUBLE,0,MPI_COMM_WORLD);
 
+/*Si es el último proceso se le da todo el bloque restante*/
+ tamanoBloque = ((N/2)*(N+1))/(cantProcesos);
+  inicio = id*tamanoBloque;
+  if( id == (cantProcesos-1)){
+    fin = (N/2)*(N+1);
+  }else{
+    fin = (id+1)*tamanoBloque;     
+  }
 
   //Suma el total de la matriz triangular U
-  for(i=0;i<N;i++){
+  //Cada proceso suma una parte
+  for(i=inicio;i<fin;i++){
     for(j=i;j<N; j++){
-      promU = promU + U[i+j*(j+1)/2]; //suma todos
-    }
+      parcialU = parcialU + U[i+j*(j+1)/2]; 
   }
   //Suma el total de la matriz inferior L
   for(i=0;i<N/cantProcesos;i++){
@@ -272,11 +313,12 @@ void procesos(int N, int cantProcesos){
     }
   }
 
-//Calculo los promedios
-  divide = 1.0/(N*N);
+  //Calculo los promedios
   MPI_Allreduce(&parcialL, &totalL, 1, MPI_UNSIGNED_LONG, MPI_SUM, MPI_COMM_WORLD);
+  MPI_Allreduce(&parcialU, &totalU, 1, MPI_UNSIGNED_LONG, MPI_SUM, MPI_COMM_WORLD);
+  divide = 1.0/(N*N);
   promL = totalL*divide;
-  promU = promU*divide;
+  promU = totalU*divide;
   promLU = promU*promL;
 
 //Sumo los 3 valores
